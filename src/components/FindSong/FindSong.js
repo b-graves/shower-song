@@ -177,7 +177,7 @@ class FindSong extends Component {
                         var win = window.open(this.state.song.external_urls.spotify, '_blank');
                         win.focus();
                     }}>
-                        <img width={400} height={400} alt={this.state.song.name + " - " + this.state.song.artists[0].name + " Artwork"} src={this.state.song.album.images[0].url} />
+                        <img width={"100%"} height={"100%"} alt={this.state.song.name + " - " + this.state.song.artists[0].name + " Artwork"} src={this.state.song.album.images[0].url} />
                         <div>
                             {this.state.song.name + " - " + this.state.song.artists[0].name}
                         </div>
@@ -215,7 +215,7 @@ class FindSong extends Component {
                         */}
                         <FormGroup>
                             <Label style={{ float: "left" }} for="singability">Something instrumental</Label>
-                            <Label style={{ float: "right" }} for="singability">Something I could sing along with</Label>
+                            <Label style={{ float: "right" }} for="singability">Something to sing along with</Label>
                             <CustomInput type="range" value={100 - this.state.preferences.instrumentalness} onChange={e => this.setState({ preferences: { ...this.state.preferences, instrumentalness: 100 - e.target.value } })} id="singability" name="singability" />
                         </FormGroup>
                          {/*
