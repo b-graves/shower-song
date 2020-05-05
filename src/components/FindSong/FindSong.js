@@ -217,7 +217,7 @@ class FindSong extends Component {
                         */}
                         <FormGroup>
                             <Label style={{ float: "left" }} for="singability">Something instrumental</Label>
-                            <Label style={{ float: "right" }} for="singability">Something to sing along with</Label>
+                            <Label style={{ float: "right" }} for="singability">Something to sing along to</Label>
                             <CustomInput type="range" value={100 - this.state.preferences.instrumentalness} onChange={e => this.setState({ preferences: { ...this.state.preferences, instrumentalness: 100 - e.target.value } })} id="singability" name="singability" />
                         </FormGroup>
                         {/*
