@@ -155,7 +155,7 @@ class FindSong extends Component {
         topTracks = Object.values(topTracks).sort(function (a, b) { return b.count - a.count })
         let maxCount = Math.max(...topTracks.map(track => track.count))
         console.log(maxCount)
-        topTracks = topTracks.filter(track => track.count >= maxCount-1)
+        topTracks = topTracks.filter(track => track.count >= maxCount - 1)
 
         this.setState({ generating: false, song: topTracks[Math.floor(Math.random() * topTracks.length)].track })
         console.log(topTracks)
@@ -182,20 +182,22 @@ class FindSong extends Component {
                             {this.state.song.name + " - " + this.state.song.artists[0].name}
                         </div>
                     </div>
-                    <Button onClick={() => this.setState({
-                        candidates: [],
-                        song: null,
-                        topArtists: null,
-                        topTracks: null,
-                        genreSeeds: null,
-                        generating: false,
-                        gettingReccomendations: false,
-                        awaiting: {}
-                    })} >Start Again</Button>
+                    <Button
+                        className="spotify-connect__button"
+                        onClick={() => this.setState({
+                            candidates: [],
+                            song: null,
+                            topArtists: null,
+                            topTracks: null,
+                            genreSeeds: null,
+                            generating: false,
+                            gettingReccomendations: false,
+                            awaiting: {}
+                        })} >Start Again</Button>
                 </div>
                 :
                 <div>
-                    <h4 style={{textAlign: "left", paddingTop: "20px"}}>I want to listen to...</h4>
+                    <h4 style={{ textAlign: "left", paddingTop: "20px" }}>I want to listen to...</h4>
                     <Form>
                         <FormGroup check inline>
                             <CustomInput checked={!this.state.preferences.familiar} onChange={e => this.setState({ preferences: { ...this.state.preferences, familiar: !e.target.checked } })} type="radio" id="familiarity1" name="familiarity" label="Something new" />
@@ -206,7 +208,7 @@ class FindSong extends Component {
                             <Label style={{ float: "right" }} for="energy">Something energising</Label>
                             <CustomInput type="range" value={this.state.preferences.energy} onChange={e => this.setState({ preferences: { ...this.state.preferences, energy: e.target.value } })} id="energy" name="energy" />
                         </FormGroup>
-                         {/*
+                        {/*
                         <FormGroup>
                             <Label style={{ float: "left" }} for="danceability">I don't feel like dancing</Label>
                             <Label style={{ float: "right" }} for="danceability">Something I can dance to</Label>
@@ -218,14 +220,14 @@ class FindSong extends Component {
                             <Label style={{ float: "right" }} for="singability">Something to sing along with</Label>
                             <CustomInput type="range" value={100 - this.state.preferences.instrumentalness} onChange={e => this.setState({ preferences: { ...this.state.preferences, instrumentalness: 100 - e.target.value } })} id="singability" name="singability" />
                         </FormGroup>
-                         {/*
+                        {/*
                         <FormGroup>
                             <Label style={{ float: "left" }} for="popularity">Something unpopular</Label>
                             <Label style={{ float: "right" }} for="popularity">Something popular</Label>
                             <CustomInput type="range" value={this.state.preferences.popularity} onChange={e => this.setState({ preferences: { ...this.state.preferences, popularity: e.target.value } })} id="popularity" name="popularity" />
                         </FormGroup>
                         */}
-                         {/*
+                        {/*
                         <FormGroup>
                             <Label style={{ float: "left" }} for="valence">Something sad</Label>
                             <Label style={{ float: "right" }} for="valence">Something uplifting</Label>
