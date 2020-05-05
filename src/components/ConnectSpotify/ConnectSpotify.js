@@ -8,9 +8,13 @@ class ConnectSpotify extends Component {
 
     }
 
+    onClick = () => {
+        window.location="http://localhost:8888/login"
+    }
+
     render() {
         return (
-            <Button className="spotify-connect__button" color="success">Connect to your Spotify account</Button>
+            <Button onClick={() => this.onClick()} className="spotify-connect__button" color="success">Connect to your Spotify account</Button>
         );
     }
 }
