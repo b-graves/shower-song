@@ -9,7 +9,14 @@ class ConnectSpotify extends Component {
     }
 
     onClick = () => {
-        window.location="http://localhost:8888/login"
+        console.log(window.location)
+        if (window.location.origin === "http://localhost:3000") {
+            console.log("here")
+            window.location="http://localhost:8888/login"
+        } else {
+            window.location="http://shower-song-backend.herokuapp.com/login"
+        }
+        
     }
 
     render() {
