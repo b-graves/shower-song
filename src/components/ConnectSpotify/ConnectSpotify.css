@@ -1,3 +1,4 @@
 .spotify-connect__button {
     margin: 50px auto;
+    display: block !important;
 }

@@ -6,7 +6,7 @@ import Slider from 'rc-slider';
 
 import "./FindSong.css";
 
-class FindSong extends Component {
+class FindSongWithAccount extends Component {
     state = {
         candidates: [],
         song: null,
@@ -292,11 +292,16 @@ class FindSong extends Component {
         return (
             this.state.song ?
                 <div>
-                    {this.state.nothingKnown ? "We couldn't wind anything you know around "+this.state.preferences.duration+" minutes long, but we thought you might like this..." : null}
+                    {this.state.nothingKnown ? "We couldn't wind anything you know around " + this.state.preferences.duration + " minutes long, but we thought you might like this..." : null}
                     <div onClick={() => {
                         var win = window.open(this.state.song.external_urls.spotify, '_blank');
                         win.focus();
                     }}>
+                        <iframe title={"track"} src={"https://open.spotify.com/embed/track/" + this.state.song.id} width={"100%"} height={"500px"} frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+                        <div>
+                            {Math.round(this.msToMins(this.state.song.duration_ms) * 2) / 2} Minute Shower
+                        </div>
+                        {/*
                         <img width={"100%"} height={"100%"} alt={this.state.song.name + " - " + this.state.song.artists[0].name + " Artwork"} src={this.state.song.album.images[0].url} />
                         <div>
                             {this.state.song.name + " - " + this.state.song.artists[0].name}
@@ -305,6 +310,7 @@ class FindSong extends Component {
                         <div>
                             {Math.round(this.msToMins(this.state.song.duration_ms) * 2) / 2} Minute Shower
                         </div>
+                    */}
                     </div>
                     <Button
                         className="spotify-connect__button"
@@ -383,4 +389,4 @@ class FindSong extends Component {
     }
 }
 
-export default FindSong;
+export default FindSongWithAccount;
