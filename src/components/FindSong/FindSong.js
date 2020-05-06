@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import { Button, CustomInput, Form, FormGroup, Label } from 'reactstrap';
 
+import 'rc-slider/assets/index.css';
+import Slider from 'rc-slider';
+
 import "./FindSong.css";
 
 class FindSong extends Component {
@@ -17,6 +20,7 @@ class FindSong extends Component {
         candidatesFiltered: false,
         awaiting: {},
         awaitingFeatures: false,
+        nothingKnown: false,
         preferences: {
             familiar: false,
             energy: 50,
@@ -24,7 +28,8 @@ class FindSong extends Component {
             instrumentalness: 50,
             popularity: 50,
             valence: 50,
-            acousticness: 50
+            acousticness: 50,
+            duration: 4
         }
     }
 
@@ -56,8 +61,8 @@ class FindSong extends Component {
                 }
             }))
 
-        url = new URL('https://api.spotify.com/v1/me/top/artists');
-        url.search = new URLSearchParams({ limit: 50, offset: 50 });
+        url = new URL('https://api.spotify.com/v1/me/albums');
+        url.search = new URLSearchParams({ limit: 50 });
         fetch(url.toString(), {
             headers: {
                 "Authorization": "Bearer " + this.props.accessToken,
@@ -66,13 +71,12 @@ class FindSong extends Component {
         }).then((response) => response.json()
             .then(data => {
                 if (!data.error) {
-                    console.log(data)
-                    this.setState({ secondaryArtists: data })
+                    this.setState({ secondaryArtists: data.items.map(album => album.album.artists[0]) })
                 }
             }))
 
-        url = new URL('https://api.spotify.com/v1/me/top/tracks');
-        url.search = new URLSearchParams({ limit: 50, offset: 50 });
+        url = new URL('https://api.spotify.com/v1/me/tracks');
+        url.search = new URLSearchParams({ limit: 50 });
         fetch(url.toString(), {
             headers: {
                 "Authorization": "Bearer " + this.props.accessToken
@@ -80,8 +84,7 @@ class FindSong extends Component {
         }).then((response) => response.json()
             .then(data => {
                 if (!data.error) {
-                    console.log(data)
-                    this.setState({ secondaryTracks: data })
+                    this.setState({ secondaryTracks: data.items.map(track => track.track) })
                 }
             }))
 
@@ -102,17 +105,31 @@ class FindSong extends Component {
         return mins * 60000;
     }
 
+    msToMins = (ms) => {
+        return ms / 60000;
+    }
+
+    shuffle = (a) => {
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
     getReccommendations = (type, values) => {
         let url = new URL('https://api.spotify.com/v1/recommendations');
+        values = this.shuffle(values.filter(value => value !== undefined))
+        console.log(values)
         for (let i = 0; i < values.length; i += 5) {
             url.search = new URLSearchParams({
-                limit: 10,
+                limit: 8,
                 ["seed_" + type]: values.slice(i, i + 5).map(value => type === "genres" ? value : value.id).join(","),
-                min_duration_ms: this.minsToMs(3),
-                max_duration_ms: this.minsToMs(5),
+                min_duration_ms: this.minsToMs(this.state.preferences.duration - 0.25),
+                max_duration_ms: this.minsToMs(this.state.preferences.duration + 0.25),
 
                 target_acousticness: this.state.preferences.acousticness / 100,
-                // target_danceability: this.state.preferences.energy / 100,
+                target_danceability: this.state.preferences.energy / 100,
                 target_energy: this.state.preferences.energy / 100,
                 target_instrumentalness: this.state.preferences.instrumentalness / 100,
                 // target_popularity: this.state.preferences.popularity,
@@ -138,10 +155,10 @@ class FindSong extends Component {
     }
 
     getCandidates = () => {
-        if (!this.state.preferences.familiar) {
+        if (!this.state.preferences.familiar || this.state.nothingKnown) {
             let genres = [];
             let topGenres = {};
-            this.state.topArtists.items.forEach(artist => { genres = genres.concat(artist.genres) });
+            this.state.topArtists.items.forEach(artist => { if (genres in artist) { genres = genres.concat(artist.genres) } });
 
             genres = genres.filter(genre => this.state.genreSeeds.includes(genre))
 
@@ -156,22 +173,22 @@ class FindSong extends Component {
             const genresSorted = Object.keys(topGenres).sort(function (a, b) { return topGenres[b] - topGenres[a] })
 
             this.setState({ gettingReccomendations: true, generating: true }, () => {
-                this.getReccommendations("tracks", this.state.topTracks.items.concat(this.state.secondaryTracks.items))
-                this.getReccommendations("artists", this.state.topArtists.items.concat(this.state.secondaryArtists.items))
+                this.getReccommendations("tracks", this.state.topTracks.items.concat(this.state.secondaryTracks))
+                this.getReccommendations("artists", this.state.topArtists.items.concat(this.state.secondaryArtists))
                 if (genresSorted.length > 0) {
                     this.getReccommendations("genres", genresSorted)
                 }
                 this.setState({ gettingReccomendations: false })
             });
         } else {
-            this.setState({ generating: true, candidates: this.state.topTracks.items.concat(this.state.secondaryTracks.items) })
+            this.setState({ generating: true, candidates: this.state.topTracks.items.concat(this.state.secondaryTracks) })
         }
     }
 
     filterCandidates = () => {
-        if (!this.state.preferences.familiar) {
+        if (!this.state.preferences.familiar || this.state.nothingKnown) {
             const topArtistIds = this.state.topArtists.items.map(artist => artist.id);
-            let candidates = this.state.candidates.filter(candidate =>  !topArtistIds.includes(candidate.artists[0].id ));
+            let candidates = this.state.candidates.filter(candidate => !topArtistIds.includes(candidate.artists[0].id));
 
             let topTracks = {};
 
@@ -196,7 +213,8 @@ class FindSong extends Component {
 
             this.setState({ candidates: topTracks.map(track => track.track), candidatesFiltered: true })
         } else {
-            this.setState({ candidatesFiltered: true })
+            console.log(this.state.candidates)
+            this.setState({ candidatesFiltered: true, candidates: this.state.candidates.filter(candidate => candidate.duration_ms >= this.minsToMs(this.state.preferences.duration - 0.25) && candidate.duration_ms <= this.minsToMs(this.state.preferences.duration + 0.25)) })
         }
     }
 
@@ -211,6 +229,7 @@ class FindSong extends Component {
     getFeatures = () => {
         this.setState({ awaitingFeatures: true }, () => {
             let url = new URL('https://api.spotify.com/v1/audio-features');
+
             url.search = new URLSearchParams({
                 ids: this.state.candidates.slice(0, 100).map(candidate => candidate.id)
             });
@@ -222,22 +241,37 @@ class FindSong extends Component {
             }).then((response) => response.json()
                 .then(data => {
                     if (!data.error) {
-                        let audioFeatures = data.audio_features.map(features => {
-                            return {
-                                ...features, mse: this.mse(
-                                    [features.energy, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness],
-                                    [this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100]
-                                )
+                        if (data.audio_features[0] === null) {
+                            this.setState({
+                                candidates: [],
+                                song: null,
+                                generating: false,
+                                gettingReccomendations: false,
+                                candidatesFiltered: false,
+                                awaiting: {},
+                                awaitingFeatures: false,
+                                nothingKnown: true
+                            })
+                        } else {
+                            let audioFeatures = data.audio_features.map(features => {
+                                return {
+                                    ...features, mse: this.mse(
+                                        [features.energy, features.danceability, features.valence, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness],
+                                        [this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100]
+                                    )
+                                }
                             }
+                            );
+                            audioFeatures.sort(function (a, b) { return a.mse - b.mse })
+                            let bestMatch = audioFeatures[0]
+                            console.log(bestMatch)
+                            this.state.candidates.forEach(candidate => {
+                                if (candidate.id === bestMatch.id) {
+                                    console.log(candidate)
+                                    this.setState({ song: candidate })
+                                }
+                            })
                         }
-                        );
-                        audioFeatures.sort(function (a, b) { return a.mse - b.mse })
-                        let bestMatch = audioFeatures[0]
-                        this.state.candidates.forEach(candidate => {
-                            if (candidate.id === bestMatch.id) {
-                                this.setState({ song: candidate })
-                            }
-                        })
                     }
                 }))
 
@@ -258,6 +292,7 @@ class FindSong extends Component {
         return (
             this.state.song ?
                 <div>
+                    {this.state.nothingKnown ? "We couldn't wind anything you know around "+this.state.preferences.duration+" minutes long, but we thought you might like this..." : null}
                     <div onClick={() => {
                         var win = window.open(this.state.song.external_urls.spotify, '_blank');
                         win.focus();
@@ -265,6 +300,10 @@ class FindSong extends Component {
                         <img width={"100%"} height={"100%"} alt={this.state.song.name + " - " + this.state.song.artists[0].name + " Artwork"} src={this.state.song.album.images[0].url} />
                         <div>
                             {this.state.song.name + " - " + this.state.song.artists[0].name}
+
+                        </div>
+                        <div>
+                            {Math.round(this.msToMins(this.state.song.duration_ms) * 2) / 2} Minute Shower
                         </div>
                     </div>
                     <Button
@@ -282,11 +321,20 @@ class FindSong extends Component {
                             candidatesFiltered: false,
                             awaiting: {},
                             awaitingFeatures: false,
+                            nothingKnown: false
                         })} >Start Again</Button>
                 </div>
                 :
                 <div>
-                    <h4 style={{ textAlign: "left", paddingTop: "20px" }}>I want to listen to...</h4>
+                    <h4 style={{ textAlign: "left", paddingTop: "20px" }}>How many minutes do you want to spend in the shower?</h4>
+                    <Slider
+                        min={2}
+                        max={8}
+                        defaultValue={this.state.preferences.duration}
+                        marks={{ 2: 2, 2.5: "", 3: 3, 3.5: "", 4: <div><div>4</div><div>Reccommended</div></div>, 4.5: "", 5: 5, 5.5: "", 6: 6, 6.5: "", 7: 7, 7.5: "", 8: 8 }} step={null}
+                        onChange={(duration) => this.setState({ preferences: { ...this.state.preferences, duration } })}
+                    />
+                    <h4 style={{ textAlign: "left", paddingTop: "50px" }}>I want to listen to...</h4>
                     <Form>
                         <FormGroup check inline>
                             <CustomInput checked={!this.state.preferences.familiar} onChange={e => this.setState({ preferences: { ...this.state.preferences, familiar: !e.target.checked } })} type="radio" id="familiarity1" name="familiarity" label="Something new" />
