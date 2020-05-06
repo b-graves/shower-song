@@ -33,7 +33,6 @@ class App extends Component {
   }
 
   render() {
-    console.log(this.state.serverData)
 
     return (
       <div className="App">

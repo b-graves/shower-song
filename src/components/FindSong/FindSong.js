@@ -9,10 +9,14 @@ class FindSong extends Component {
         song: null,
         topArtists: null,
         topTracks: null,
+        secondaryArtists: null,
+        secondaryTracks: null,
         genreSeeds: null,
         generating: false,
         gettingReccomendations: false,
+        candidatesFiltered: false,
         awaiting: {},
+        awaitingFeatures: false,
         preferences: {
             familiar: false,
             energy: 50,
@@ -26,7 +30,7 @@ class FindSong extends Component {
 
     onClick = () => {
         let url = new URL('https://api.spotify.com/v1/me/top/artists');
-        url.search = new URLSearchParams({ limit: '100' });
+        url.search = new URLSearchParams({ limit: 50 });
         fetch(url.toString(), {
             headers: {
                 "Authorization": "Bearer " + this.props.accessToken,
@@ -40,7 +44,7 @@ class FindSong extends Component {
             }))
 
         url = new URL('https://api.spotify.com/v1/me/top/tracks');
-        url.search = new URLSearchParams({ limit: '100' });
+        url.search = new URLSearchParams({ limit: 50 });
         fetch(url.toString(), {
             headers: {
                 "Authorization": "Bearer " + this.props.accessToken
@@ -49,6 +53,35 @@ class FindSong extends Component {
             .then(data => {
                 if (!data.error) {
                     this.setState({ topTracks: data })
+                }
+            }))
+
+        url = new URL('https://api.spotify.com/v1/me/top/artists');
+        url.search = new URLSearchParams({ limit: 50, offset: 50 });
+        fetch(url.toString(), {
+            headers: {
+                "Authorization": "Bearer " + this.props.accessToken,
+
+            }
+        }).then((response) => response.json()
+            .then(data => {
+                if (!data.error) {
+                    console.log(data)
+                    this.setState({ secondaryArtists: data })
+                }
+            }))
+
+        url = new URL('https://api.spotify.com/v1/me/top/tracks');
+        url.search = new URLSearchParams({ limit: 50, offset: 50 });
+        fetch(url.toString(), {
+            headers: {
+                "Authorization": "Bearer " + this.props.accessToken
+            }
+        }).then((response) => response.json()
+            .then(data => {
+                if (!data.error) {
+                    console.log(data)
+                    this.setState({ secondaryTracks: data })
                 }
             }))
 
@@ -105,67 +138,119 @@ class FindSong extends Component {
     }
 
     getCandidates = () => {
-        let genres = [];
-        let topGenres = {};
-        this.state.topArtists.items.forEach(artist => { genres = genres.concat(artist.genres) });
+        if (!this.state.preferences.familiar) {
+            let genres = [];
+            let topGenres = {};
+            this.state.topArtists.items.forEach(artist => { genres = genres.concat(artist.genres) });
 
-        genres = genres.filter(genre => this.state.genreSeeds.includes(genre))
+            genres = genres.filter(genre => this.state.genreSeeds.includes(genre))
 
-        genres.forEach(genre => {
-            if (genre in topGenres) {
-                topGenres[genre] += 1;
-            } else {
-                topGenres[genre] = 1;
-            }
-        })
+            genres.forEach(genre => {
+                if (genre in topGenres) {
+                    topGenres[genre] += 1;
+                } else {
+                    topGenres[genre] = 1;
+                }
+            })
 
-        const genresSorted = Object.keys(topGenres).sort(function (a, b) { return topGenres[b] - topGenres[a] })
+            const genresSorted = Object.keys(topGenres).sort(function (a, b) { return topGenres[b] - topGenres[a] })
 
-        this.setState({ gettingReccomendations: true, generating: true }, () => {
-            this.getReccommendations("tracks", this.state.topTracks.items)
-            this.getReccommendations("artists", this.state.topArtists.items)
-            if (genresSorted.length > 0) {
-                this.getReccommendations("genres", genresSorted)
-            }
-            this.setState({ gettingReccomendations: false })
-        });
+            this.setState({ gettingReccomendations: true, generating: true }, () => {
+                this.getReccommendations("tracks", this.state.topTracks.items.concat(this.state.secondaryTracks.items))
+                this.getReccommendations("artists", this.state.topArtists.items.concat(this.state.secondaryArtists.items))
+                if (genresSorted.length > 0) {
+                    this.getReccommendations("genres", genresSorted)
+                }
+                this.setState({ gettingReccomendations: false })
+            });
+        } else {
+            this.setState({ generating: true, candidates: this.state.topTracks.items.concat(this.state.secondaryTracks.items) })
+        }
     }
 
-    pickSong = () => {
-        let candidates = this.state.candidates;
+    filterCandidates = () => {
+        if (!this.state.preferences.familiar) {
+            const topArtistIds = this.state.topArtists.items.map(artist => artist.id);
+            let candidates = this.state.candidates.filter(candidate =>  !topArtistIds.includes(candidate.artists[0].id ));
 
-        console.log(candidates)
+            let topTracks = {};
 
-        let topTracks = {};
-
-        candidates.forEach(track => {
-            if (track.id in topTracks) {
-                topTracks[track.id] = {
-                    ...topTracks[track.id],
-                    count: topTracks[track.id].count + 1
+            candidates.forEach(track => {
+                if (track.id in topTracks) {
+                    topTracks[track.id] = {
+                        ...topTracks[track.id],
+                        count: topTracks[track.id].count + 1
+                    }
+                } else {
+                    topTracks[track.id] = {
+                        track,
+                        count: 1
+                    }
                 }
-            } else {
-                topTracks[track.id] = {
-                    track,
-                    count: 1
+            })
+
+            topTracks = Object.values(topTracks).sort(function (a, b) { return b.count - a.count })
+            // let maxCount = Math.max(...topTracks.map(track => track.count))
+
+            // topTracks = topTracks.filter(track => track.count >= maxCount - 2)
+
+            this.setState({ candidates: topTracks.map(track => track.track), candidatesFiltered: true })
+        } else {
+            this.setState({ candidatesFiltered: true })
+        }
+    }
+
+    mse = (a, b) => {
+        let error = 0
+        for (let i = 0; i < a.length; i++) {
+            error += Math.pow((b[i] - a[i]), 2)
+        }
+        return error / a.length
+    }
+
+    getFeatures = () => {
+        this.setState({ awaitingFeatures: true }, () => {
+            let url = new URL('https://api.spotify.com/v1/audio-features');
+            url.search = new URLSearchParams({
+                ids: this.state.candidates.slice(0, 100).map(candidate => candidate.id)
+            });
+
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken
                 }
-            }
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        let audioFeatures = data.audio_features.map(features => {
+                            return {
+                                ...features, mse: this.mse(
+                                    [features.energy, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness],
+                                    [this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100]
+                                )
+                            }
+                        }
+                        );
+                        audioFeatures.sort(function (a, b) { return a.mse - b.mse })
+                        let bestMatch = audioFeatures[0]
+                        this.state.candidates.forEach(candidate => {
+                            if (candidate.id === bestMatch.id) {
+                                this.setState({ song: candidate })
+                            }
+                        })
+                    }
+                }))
+
         })
-
-        topTracks = Object.values(topTracks).sort(function (a, b) { return b.count - a.count })
-        let maxCount = Math.max(...topTracks.map(track => track.count))
-        console.log(maxCount)
-        topTracks = topTracks.filter(track => track.count >= maxCount - 1)
-
-        this.setState({ generating: false, song: topTracks[Math.floor(Math.random() * topTracks.length)].track })
-        console.log(topTracks)
     }
 
     componentDidUpdate() {
-        if (!this.state.song && this.state.topArtists && this.state.topTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
+        if (!this.state.song && this.state.topArtists && this.state.topTracks && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
             this.getCandidates()
-        } else if (Object.values(this.state.awaiting).every(awaiting => !awaiting) && this.state.generating && !this.state.gettingReccomendations) {
-            this.pickSong()
+        } else if (!this.state.candidatesFiltered && Object.values(this.state.awaiting).every(awaiting => !awaiting) && this.state.generating && !this.state.gettingReccomendations) {
+            this.filterCandidates()
+        } else if (this.state.candidatesFiltered && !this.state.awaitingFeatures) {
+            this.getFeatures()
         }
     }
 
@@ -189,10 +274,14 @@ class FindSong extends Component {
                             song: null,
                             topArtists: null,
                             topTracks: null,
+                            secondaryArtists: null,
+                            secondaryTracks: null,
                             genreSeeds: null,
                             generating: false,
                             gettingReccomendations: false,
-                            awaiting: {}
+                            candidatesFiltered: false,
+                            awaiting: {},
+                            awaitingFeatures: false,
                         })} >Start Again</Button>
                 </div>
                 :
