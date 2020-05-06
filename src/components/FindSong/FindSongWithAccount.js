@@ -14,6 +14,8 @@ class FindSongWithAccount extends Component {
         topTracks: null,
         secondaryArtists: null,
         secondaryTracks: null,
+        recentTracks: null,
+        discoverWeekly: null,
         genreSeeds: null,
         generating: false,
         gettingReccomendations: false,
@@ -21,6 +23,7 @@ class FindSongWithAccount extends Component {
         awaiting: {},
         awaitingFeatures: false,
         nothingKnown: false,
+        submitted: false,
         preferences: {
             familiar: false,
             energy: 50,
@@ -34,6 +37,7 @@ class FindSongWithAccount extends Component {
     }
 
     onClick = () => {
+        this.setState({ submitted: true })
         let url = new URL('https://api.spotify.com/v1/me/top/artists');
         url.search = new URLSearchParams({ limit: 50 });
         fetch(url.toString(), {
@@ -88,6 +92,48 @@ class FindSongWithAccount extends Component {
                 }
             }))
 
+        url = new URL('https://api.spotify.com/v1/me/playlists');
+        url.search = new URLSearchParams({ limit: 50 });
+        fetch(url.toString(), {
+            headers: {
+                "Authorization": "Bearer " + this.props.accessToken
+            }
+        }).then((response) => response.json()
+            .then(data => {
+                if (!data.error) {
+                    data.items.forEach(playlist => {
+                        if (playlist.name === "Discover Weekly") {
+
+                            url = new URL('https://api.spotify.com/v1/playlists/' + playlist.id + '/tracks');
+                            url.search = new URLSearchParams({ limit: 50 });
+                            fetch(url.toString(), {
+                                headers: {
+                                    "Authorization": "Bearer " + this.props.accessToken
+                                }
+                            }).then((response) => response.json()
+                                .then(data => {
+                                    if (!data.error) {
+                                        this.setState({ discoverWeekly: data.items.map(track => track.track) })
+                                    }
+                                }))
+                        }
+                    })
+                }
+            }))
+
+        url = new URL('https://api.spotify.com/v1/me/player/recently-played');
+        url.search = new URLSearchParams({ limit: 50 });
+        fetch(url.toString(), {
+            headers: {
+                "Authorization": "Bearer " + this.props.accessToken
+            }
+        }).then((response) => response.json()
+            .then(data => {
+                if (!data.error) {
+                    this.setState({ recentTracks: data.items.map(track => track.track) })
+                }
+            }))
+
         url = new URL('https://api.spotify.com/v1/recommendations/available-genre-seeds');
         fetch(url.toString(), {
             headers: {
@@ -117,13 +163,19 @@ class FindSongWithAccount extends Component {
         return a;
     }
 
+    randomItem = (items) => {
+        return items[Math.floor(Math.random() * items.length)]
+    }
+
     getReccommendations = (type, values) => {
+        if (type === "tracks") {
+            console.log(values)
+        }
         let url = new URL('https://api.spotify.com/v1/recommendations');
         values = this.shuffle(values.filter(value => value !== undefined))
-        console.log(values)
         for (let i = 0; i < values.length; i += 5) {
             url.search = new URLSearchParams({
-                limit: 8,
+                limit: 20,
                 ["seed_" + type]: values.slice(i, i + 5).map(value => type === "genres" ? value : value.id).join(","),
                 min_duration_ms: this.minsToMs(this.state.preferences.duration - 0.25),
                 max_duration_ms: this.minsToMs(this.state.preferences.duration + 0.25),
@@ -172,8 +224,9 @@ class FindSongWithAccount extends Component {
 
             const genresSorted = Object.keys(topGenres).sort(function (a, b) { return topGenres[b] - topGenres[a] })
 
-            this.setState({ gettingReccomendations: true, generating: true }, () => {
-                this.getReccommendations("tracks", this.state.topTracks.items.concat(this.state.secondaryTracks))
+            this.setState({ gettingReccomendations: true, generating: true, candidates: this.state.discoverWeekly }, () => {
+                console.log(this.state.discoverWeekly)
+                this.getReccommendations("tracks", this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks).concat(this.state.discoverWeekly))
                 this.getReccommendations("artists", this.state.topArtists.items.concat(this.state.secondaryArtists))
                 if (genresSorted.length > 0) {
                     this.getReccommendations("genres", genresSorted)
@@ -181,7 +234,7 @@ class FindSongWithAccount extends Component {
                 this.setState({ gettingReccomendations: false })
             });
         } else {
-            this.setState({ generating: true, candidates: this.state.topTracks.items.concat(this.state.secondaryTracks) })
+            this.setState({ generating: true, candidates: this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks) })
         }
     }
 
@@ -279,7 +332,7 @@ class FindSongWithAccount extends Component {
     }
 
     componentDidUpdate() {
-        if (!this.state.song && this.state.topArtists && this.state.topTracks && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
+        if (!this.state.song && this.state.discoverWeekly && this.state.topArtists && this.state.topTracks && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
             this.getCandidates()
         } else if (!this.state.candidatesFiltered && Object.values(this.state.awaiting).every(awaiting => !awaiting) && this.state.generating && !this.state.gettingReccomendations) {
             this.filterCandidates()
@@ -292,12 +345,15 @@ class FindSongWithAccount extends Component {
         return (
             this.state.song ?
                 <div>
-                    {this.state.nothingKnown ? "We couldn't wind anything you know around " + this.state.preferences.duration + " minutes long, but we thought you might like this..." : null}
+                    {this.state.nothingKnown ? "We couldn't find anything you know around " + this.state.preferences.duration + " minutes long, but we thought you might like this..." : null}
                     <div onClick={() => {
                         var win = window.open(this.state.song.external_urls.spotify, '_blank');
                         win.focus();
                     }}>
                         <iframe title={"track"} src={"https://open.spotify.com/embed/track/" + this.state.song.id} width={"100%"} height={"500px"} frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+                        <iframe title={"yt"} id="ytplayer" type="text/html" width={"100%"} height="360"
+                            src={"https://www.youtube.com/embed?listType=search&list=" + this.state.song.name + " " + this.state.song.artists[0].name}
+                            frameborder="0"></iframe>
                         <div>
                             {Math.round(this.msToMins(this.state.song.duration_ms) * 2) / 2} Minute Shower
                         </div>
@@ -321,69 +377,77 @@ class FindSongWithAccount extends Component {
                             topTracks: null,
                             secondaryArtists: null,
                             secondaryTracks: null,
+                            recentTracks: null,
+                            discoverWeekly: null,
                             genreSeeds: null,
                             generating: false,
                             gettingReccomendations: false,
                             candidatesFiltered: false,
                             awaiting: {},
                             awaitingFeatures: false,
-                            nothingKnown: false
+                            nothingKnown: false,
+                            submitted: false,
                         })} >Start Again</Button>
                 </div>
                 :
-                <div>
-                    <h4 style={{ textAlign: "left", paddingTop: "20px" }}>How many minutes do you want to spend in the shower?</h4>
-                    <Slider
-                        min={2}
-                        max={8}
-                        defaultValue={this.state.preferences.duration}
-                        marks={{ 2: 2, 2.5: "", 3: 3, 3.5: "", 4: <div><div>4</div><div>Reccommended</div></div>, 4.5: "", 5: 5, 5.5: "", 6: 6, 6.5: "", 7: 7, 7.5: "", 8: 8 }} step={null}
-                        onChange={(duration) => this.setState({ preferences: { ...this.state.preferences, duration } })}
-                    />
-                    <h4 style={{ textAlign: "left", paddingTop: "50px" }}>I want to listen to...</h4>
-                    <Form>
-                        <FormGroup check inline>
-                            <CustomInput checked={!this.state.preferences.familiar} onChange={e => this.setState({ preferences: { ...this.state.preferences, familiar: !e.target.checked } })} type="radio" id="familiarity1" name="familiarity" label="Something new" />
-                            <CustomInput checked={this.state.preferences.familiar} onChange={e => this.setState({ preferences: { ...this.state.preferences, familiar: e.target.checked } })} type="radio" id="familiarity" name="familiarity" label="Something I know" />
-                        </FormGroup>
-                        <FormGroup>
-                            <Label style={{ float: "left" }} for="energy">Something relaxing</Label>
-                            <Label style={{ float: "right" }} for="energy">Something energising</Label>
-                            <CustomInput type="range" value={this.state.preferences.energy} onChange={e => this.setState({ preferences: { ...this.state.preferences, energy: e.target.value } })} id="energy" name="energy" />
-                        </FormGroup>
-                        {/*
+                !this.state.submitted ?
+                    <div>
+                        <h4 style={{ textAlign: "left", paddingTop: "20px" }}>How many minutes do you want to spend in the shower?</h4>
+                        <Slider
+                            min={2}
+                            max={8}
+                            defaultValue={this.state.preferences.duration}
+                            marks={{ 2: 2, 2.5: "", 3: 3, 3.5: "", 4: <div><div>4</div><div>Reccommended</div></div>, 4.5: "", 5: 5, 5.5: "", 6: 6, 6.5: "", 7: 7, 7.5: "", 8: 8 }} step={null}
+                            onChange={(duration) => this.setState({ preferences: { ...this.state.preferences, duration } })}
+                        />
+                        <h4 style={{ textAlign: "left", paddingTop: "50px" }}>I want to listen to...</h4>
+                        <Form>
+                            <FormGroup check inline>
+                                <CustomInput checked={!this.state.preferences.familiar} onChange={e => this.setState({ preferences: { ...this.state.preferences, familiar: !e.target.checked } })} type="radio" id="familiarity1" name="familiarity" label="Something new" />
+                                <CustomInput checked={this.state.preferences.familiar} onChange={e => this.setState({ preferences: { ...this.state.preferences, familiar: e.target.checked } })} type="radio" id="familiarity" name="familiarity" label="Something I know" />
+                            </FormGroup>
+                            <FormGroup>
+                                <Label style={{ float: "left" }} for="energy">Something relaxing</Label>
+                                <Label style={{ float: "right" }} for="energy">Something energising</Label>
+                                <CustomInput type="range" value={this.state.preferences.energy} onChange={e => this.setState({ preferences: { ...this.state.preferences, energy: e.target.value } })} id="energy" name="energy" />
+                            </FormGroup>
+                            {/*
                         <FormGroup>
                             <Label style={{ float: "left" }} for="danceability">I don't feel like dancing</Label>
                             <Label style={{ float: "right" }} for="danceability">Something I can dance to</Label>
                             <CustomInput type="range" value={this.state.preferences.danceability} onChange={e => this.setState({ preferences: { ...this.state.preferences, danceability: e.target.value } })} id="danceability" name="danceability" />
                         </FormGroup>
                         */}
-                        <FormGroup>
-                            <Label style={{ float: "left" }} for="singability">Something instrumental</Label>
-                            <Label style={{ float: "right" }} for="singability">Something to sing along to</Label>
-                            <CustomInput type="range" value={100 - this.state.preferences.instrumentalness} onChange={e => this.setState({ preferences: { ...this.state.preferences, instrumentalness: 100 - e.target.value } })} id="singability" name="singability" />
-                        </FormGroup>
-                        {/*
+                            <FormGroup>
+                                <Label style={{ float: "left" }} for="singability">Something instrumental</Label>
+                                <Label style={{ float: "right" }} for="singability">Something to sing along to</Label>
+                                <CustomInput type="range" value={100 - this.state.preferences.instrumentalness} onChange={e => this.setState({ preferences: { ...this.state.preferences, instrumentalness: 100 - e.target.value } })} id="singability" name="singability" />
+                            </FormGroup>
+                            {/*
                         <FormGroup>
                             <Label style={{ float: "left" }} for="popularity">Something unpopular</Label>
                             <Label style={{ float: "right" }} for="popularity">Something popular</Label>
                             <CustomInput type="range" value={this.state.preferences.popularity} onChange={e => this.setState({ preferences: { ...this.state.preferences, popularity: e.target.value } })} id="popularity" name="popularity" />
                         </FormGroup>
                         */}
-                        {/*
+                            {/*
                         <FormGroup>
                             <Label style={{ float: "left" }} for="valence">Something sad</Label>
                             <Label style={{ float: "right" }} for="valence">Something uplifting</Label>
                             <CustomInput type="range" value={this.state.preferences.valence} onChange={e => this.setState({ preferences: { ...this.state.preferences, valence: e.target.value } })} id="valence" name="valence" />
                         </FormGroup>
                         */}
-                        <FormGroup>
-                            <Label style={{ float: "left" }} for="acousticness">Something electronic</Label>
-                            <Label style={{ float: "right" }} for="acousticness">Something accoustic</Label>
-                            <CustomInput type="range" value={this.state.preferences.acousticness} onChange={e => this.setState({ preferences: { ...this.state.preferences, acousticness: e.target.value } })} id="acousticness" name="valence" />
-                        </FormGroup>
-                    </Form>
-                    <Button onClick={() => this.onClick()} className="spotify-connect__button" color="primary">Find Your Song</Button>
+                            <FormGroup>
+                                <Label style={{ float: "left" }} for="acousticness">Something electronic</Label>
+                                <Label style={{ float: "right" }} for="acousticness">Something accoustic</Label>
+                                <CustomInput type="range" value={this.state.preferences.acousticness} onChange={e => this.setState({ preferences: { ...this.state.preferences, acousticness: e.target.value } })} id="acousticness" name="valence" />
+                            </FormGroup>
+                        </Form>
+                        <Button onClick={() => this.onClick()} className="spotify-connect__button" color="primary">Find Your Song</Button>
+                    </div>
+                    :
+                    <div>
+                        Finding you the perfect song...
                 </div>
         );
     }
