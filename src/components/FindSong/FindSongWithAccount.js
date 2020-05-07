@@ -354,6 +354,7 @@ class FindSongWithAccount extends Component {
                         nothingKnown={this.state.nothingKnown}
                         showSpotify={true}
                         showYouTube={false}
+                        accessToken={this.props.accessToken}
                     />
                     <Button
                         className="spotify-connect__button"
