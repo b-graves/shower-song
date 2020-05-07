@@ -8,8 +8,6 @@ import "./FindSong.css";
 import Preferences from './Preferences';
 import Song from './Song';
 
-import { scanFeed, scanVideo } from 'scany';
-
 class FindSongWithoutAccount extends Component {
     state = {
         genreSeeds: [],
