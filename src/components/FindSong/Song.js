@@ -18,27 +18,28 @@ class Song extends Component {
     }
 
     autoPlay = () => {
+        setTimeout(() => {
+            let url = new URL('https://api.spotify.com/v1/me/player/queue');
 
-        let url = new URL('https://api.spotify.com/v1/me/player/queue');
+            url.search = new URLSearchParams({
+                uri: this.props.song.uri
+            });
 
-        url.search = new URLSearchParams({
-            uri: this.props.song.uri
-        });
-
-        fetch(url.toString(), {
-            headers: {
-                "Authorization": "Bearer " + this.props.accessToken
-            },
-            method: 'POST'
-        }).then(data => {
-            let url = new URL('https://api.spotify.com/v1/me/player/next');
             fetch(url.toString(), {
                 headers: {
                     "Authorization": "Bearer " + this.props.accessToken
                 },
                 method: 'POST'
-            })
-        });
+            }).then(data => {
+                let url = new URL('https://api.spotify.com/v1/me/player/next');
+                fetch(url.toString(), {
+                    headers: {
+                        "Authorization": "Bearer " + this.props.accessToken
+                    },
+                    method: 'POST'
+                })
+            });
+        }, 5000);
 
     }
 
