@@ -6,6 +6,9 @@ import Slider from 'rc-slider';
 
 import "./FindSong.css";
 
+import Song from  "./Song"
+import Preferences from "./Preferences"
+
 class FindSongWithAccount extends Component {
     state = {
         candidates: [],
@@ -187,7 +190,7 @@ class FindSongWithAccount extends Component {
                 // target_popularity: this.state.preferences.popularity,
                 target_valence: this.state.preferences.energy / 100,
             });
-            this.setState({ awaiting: { ...this.state.awaiting, ["artists" + i]: true } })
+            this.setState({ awaiting: { ...this.state.awaiting, [type + i]: true } })
             fetch(url.toString(), {
                 headers: {
                     "Authorization": "Bearer " + this.props.accessToken
@@ -345,29 +348,13 @@ class FindSongWithAccount extends Component {
         return (
             this.state.song ?
                 <div>
-                    {this.state.nothingKnown ? "We couldn't find anything you know around " + this.state.preferences.duration + " minutes long, but we thought you might like this..." : null}
-                    <div onClick={() => {
-                        var win = window.open(this.state.song.external_urls.spotify, '_blank');
-                        win.focus();
-                    }}>
-                        <iframe title={"track"} src={"https://open.spotify.com/embed/track/" + this.state.song.id} width={"100%"} height={"500px"} frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
-                        <iframe title={"yt"} id="ytplayer" type="text/html" width={"100%"} height="360"
-                            src={"https://www.youtube.com/embed?listType=search&list=" + this.state.song.name + " " + this.state.song.artists[0].name}
-                            frameborder="0"></iframe>
-                        <div>
-                            {Math.round(this.msToMins(this.state.song.duration_ms) * 2) / 2} Minute Shower
-                        </div>
-                        {/*
-                        <img width={"100%"} height={"100%"} alt={this.state.song.name + " - " + this.state.song.artists[0].name + " Artwork"} src={this.state.song.album.images[0].url} />
-                        <div>
-                            {this.state.song.name + " - " + this.state.song.artists[0].name}
-
-                        </div>
-                        <div>
-                            {Math.round(this.msToMins(this.state.song.duration_ms) * 2) / 2} Minute Shower
-                        </div>
-                    */}
-                    </div>
+                    <Song 
+                        song={this.state.song}
+                        preferences={this.state.preferences}
+                        nothingKnown={this.state.nothingKnown}
+                        showSpotify={true}
+                        showYouTube={false}
+                    />
                     <Button
                         className="spotify-connect__button"
                         onClick={() => this.setState({
@@ -392,57 +379,12 @@ class FindSongWithAccount extends Component {
                 :
                 !this.state.submitted ?
                     <div>
-                        <h4 style={{ textAlign: "left", paddingTop: "20px" }}>How many minutes do you want to spend in the shower?</h4>
-                        <Slider
-                            min={2}
-                            max={8}
-                            defaultValue={this.state.preferences.duration}
-                            marks={{ 2: 2, 2.5: "", 3: 3, 3.5: "", 4: <div><div>4</div><div>Reccommended</div></div>, 4.5: "", 5: 5, 5.5: "", 6: 6, 6.5: "", 7: 7, 7.5: "", 8: 8 }} step={null}
-                            onChange={(duration) => this.setState({ preferences: { ...this.state.preferences, duration } })}
+                        <Preferences 
+                            preferences={this.state.preferences}
+                            setPreferences={preferences => this.setState({preferences})} 
+                            showFamiliarity={true}
+                            showGenres={false}
                         />
-                        <h4 style={{ textAlign: "left", paddingTop: "50px" }}>I want to listen to...</h4>
-                        <Form>
-                            <FormGroup check inline>
-                                <CustomInput checked={!this.state.preferences.familiar} onChange={e => this.setState({ preferences: { ...this.state.preferences, familiar: !e.target.checked } })} type="radio" id="familiarity1" name="familiarity" label="Something new" />
-                                <CustomInput checked={this.state.preferences.familiar} onChange={e => this.setState({ preferences: { ...this.state.preferences, familiar: e.target.checked } })} type="radio" id="familiarity" name="familiarity" label="Something I know" />
-                            </FormGroup>
-                            <FormGroup>
-                                <Label style={{ float: "left" }} for="energy">Something relaxing</Label>
-                                <Label style={{ float: "right" }} for="energy">Something energising</Label>
-                                <CustomInput type="range" value={this.state.preferences.energy} onChange={e => this.setState({ preferences: { ...this.state.preferences, energy: e.target.value } })} id="energy" name="energy" />
-                            </FormGroup>
-                            {/*
-                        <FormGroup>
-                            <Label style={{ float: "left" }} for="danceability">I don't feel like dancing</Label>
-                            <Label style={{ float: "right" }} for="danceability">Something I can dance to</Label>
-                            <CustomInput type="range" value={this.state.preferences.danceability} onChange={e => this.setState({ preferences: { ...this.state.preferences, danceability: e.target.value } })} id="danceability" name="danceability" />
-                        </FormGroup>
-                        */}
-                            <FormGroup>
-                                <Label style={{ float: "left" }} for="singability">Something instrumental</Label>
-                                <Label style={{ float: "right" }} for="singability">Something to sing along to</Label>
-                                <CustomInput type="range" value={100 - this.state.preferences.instrumentalness} onChange={e => this.setState({ preferences: { ...this.state.preferences, instrumentalness: 100 - e.target.value } })} id="singability" name="singability" />
-                            </FormGroup>
-                            {/*
-                        <FormGroup>
-                            <Label style={{ float: "left" }} for="popularity">Something unpopular</Label>
-                            <Label style={{ float: "right" }} for="popularity">Something popular</Label>
-                            <CustomInput type="range" value={this.state.preferences.popularity} onChange={e => this.setState({ preferences: { ...this.state.preferences, popularity: e.target.value } })} id="popularity" name="popularity" />
-                        </FormGroup>
-                        */}
-                            {/*
-                        <FormGroup>
-                            <Label style={{ float: "left" }} for="valence">Something sad</Label>
-                            <Label style={{ float: "right" }} for="valence">Something uplifting</Label>
-                            <CustomInput type="range" value={this.state.preferences.valence} onChange={e => this.setState({ preferences: { ...this.state.preferences, valence: e.target.value } })} id="valence" name="valence" />
-                        </FormGroup>
-                        */}
-                            <FormGroup>
-                                <Label style={{ float: "left" }} for="acousticness">Something electronic</Label>
-                                <Label style={{ float: "right" }} for="acousticness">Something accoustic</Label>
-                                <CustomInput type="range" value={this.state.preferences.acousticness} onChange={e => this.setState({ preferences: { ...this.state.preferences, acousticness: e.target.value } })} id="acousticness" name="valence" />
-                            </FormGroup>
-                        </Form>
                         <Button onClick={() => this.onClick()} className="spotify-connect__button" color="primary">Find Your Song</Button>
                     </div>
                     :

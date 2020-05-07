@@ -6,6 +6,7 @@ import { Container, Row, Col } from 'reactstrap';
 
 import ConnectSpotify from "./components/ConnectSpotify/ConnectSpotify";
 import FindSongWithAccount from "./components/FindSong/FindSongWithAccount";
+import FindSongWithoutAccount from "./components/FindSong/FindSongWithoutAccount";
 
 class App extends Component {
 
@@ -50,7 +51,7 @@ class App extends Component {
               {this.state.accessToken ? 
                 this.state.connectedToSpotifyAccount ? 
                 <div><FindSongWithAccount accessToken={this.state.accessToken} /></div>
-                : null
+                : <div><FindSongWithoutAccount accessToken={this.state.accessToken} /></div>
                 : <ConnectSpotify setConnected={connected => this.setConnected(connected)} />}
             </Col>
           </Row>
