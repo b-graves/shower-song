@@ -18,18 +18,19 @@ class Song extends Component {
     }
 
     autoPlay = () => {
-        let url = new URL('https://api.spotify.com/v1/me/player/queue');
+        setTimeout(() => {
+            let url = new URL('https://api.spotify.com/v1/me/player/queue');
 
-        url.search = new URLSearchParams({
-            uri: this.props.song.uri
-        });
+            url.search = new URLSearchParams({
+                uri: this.props.song.uri
+            });
 
-        fetch(url.toString(), {
-            headers: {
-                "Authorization": "Bearer " + this.props.accessToken
-            },
-            method: 'POST'
-        }).then(data => {
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken
+                },
+                method: 'POST'
+            }).then(data => {
                 let url = new URL('https://api.spotify.com/v1/me/player/next');
                 fetch(url.toString(), {
                     headers: {
@@ -38,6 +39,7 @@ class Song extends Component {
                     method: 'POST'
                 })
             });
+        }, 5000);
 
     }
 
@@ -48,9 +50,9 @@ class Song extends Component {
                 {this.props.nothingKnown ? "We couldn't find anything you know around " + this.props.preferences.duration + " minutes long, but we thought you might like this..." : null}
                 <div>
                     <Button onClick={() => {
-                        this.autoPlay()
                         var win = window.open(this.props.song.external_urls.spotify, '_blank');
                         win.focus();
+                        this.autoPlay();
                     }} >Listen on Spotify</Button>
 
                     <Button onClick={() => {
