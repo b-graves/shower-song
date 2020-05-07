@@ -14,6 +14,8 @@
     "react-dom": "^16.13.1",
     "react-full-height": "^1.2.1",
     "react-scripts": "3.4.1",
+    "react-scroll": "^1.7.16",
+    "react-scrolllock": "^5.0.1",
     "reactstrap": "^8.4.1"
   },
   "scripts": {

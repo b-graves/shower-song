@@ -1,13 +1,20 @@
 import React, { Component } from 'react';
-import { Button, CustomInput, Form, FormGroup, Label } from 'reactstrap';
+import { Button, Container, CustomInput, Form, FormGroup, Label } from 'reactstrap';
 
 import 'rc-slider/assets/index.css';
 import Slider from 'rc-slider';
 
 import "./FindSong.css";
 
-import Song from  "./Song"
+import Song from "./Song"
 import Preferences from "./Preferences"
+
+import FullHeight from "react-full-height";
+
+import ScrollLock, { TouchScrollable } from 'react-scrolllock';
+
+
+import { Link, Element, Events, animateScroll as scroll, scrollSpy, scroller } from 'react-scroll'
 
 class FindSongWithAccount extends Component {
     state = {
@@ -344,56 +351,99 @@ class FindSongWithAccount extends Component {
         }
     }
 
+    scrollTo(section) {
+        // scroll.scrollToBottom();
+        scroller.scrollTo(section, {
+            duration: 750,
+            delay: 0,
+            smooth: true,
+            offset: 0
+        })
+    }
+
     render() {
         return (
-            this.state.song ?
-                <div>
-                    <Song 
-                        song={this.state.song}
-                        preferences={this.state.preferences}
-                        nothingKnown={this.state.nothingKnown}
-                        showSpotify={true}
-                        showYouTube={false}
-                        accessToken={this.props.accessToken}
-                    />
-                    <Button
-                        className="spotify-connect__button"
-                        onClick={() => this.setState({
-                            candidates: [],
-                            song: null,
-                            topArtists: null,
-                            topTracks: null,
-                            secondaryArtists: null,
-                            secondaryTracks: null,
-                            recentTracks: null,
-                            discoverWeekly: null,
-                            genreSeeds: null,
-                            generating: false,
-                            gettingReccomendations: false,
-                            candidatesFiltered: false,
-                            awaiting: {},
-                            awaitingFeatures: false,
-                            nothingKnown: false,
-                            submitted: false,
-                        })} >Start Again</Button>
+            <ScrollLock>
+                <div >
+                    <Element name="time">
+                        <FullHeight className="preferences--time">
+                            <Button onClick={() => this.scrollTo("song")}>Next</Button>
+                        </FullHeight>
+                    </Element>
+                    <Element name="song">
+                        <FullHeight className="preferences--song">
+                            <Button onClick={() => this.scrollTo("time")}>Prev</Button>
+                            <Button onClick={() => this.scrollTo("searching")}>Next</Button>
+                        </FullHeight>
+                    </Element>
+                    <Element name="searching">
+                        <FullHeight className="searching">
+                            <Button onClick={() => this.scrollTo("song")}>Prev</Button>
+                            <Button onClick={() => this.scrollTo("result")}>Next</Button>
+                        </FullHeight>
+                    </Element>
+                    <Element name="result">
+                        <FullHeight className="song-result">
+                            <Button onClick={() => this.scrollTo("searching")}>Prev</Button>
+                        </FullHeight>
+                    </Element>
                 </div>
-                :
-                !this.state.submitted ?
-                    <div>
-                        <Preferences 
-                            preferences={this.state.preferences}
-                            setPreferences={preferences => this.setState({preferences})} 
-                            showFamiliarity={true}
-                            showGenres={false}
-                        />
-                        <Button onClick={() => this.onClick()} className="spotify-connect__button" color="primary">Find Your Song</Button>
-                    </div>
-                    :
-                    <div>
-                        Finding you the perfect song...
-                </div>
-        );
+            </ScrollLock>
+
+        )
     }
+
+    // render() {
+    //     return (
+
+    //         this.state.song ?
+    //             <div>
+    //                 <Song 
+    //                     song={this.state.song}
+    //                     preferences={this.state.preferences}
+    //                     nothingKnown={this.state.nothingKnown}
+    //                     showSpotify={true}
+    //                     showYouTube={false}
+    //                     accessToken={this.props.accessToken}
+    //                 />
+    //                 <Button
+    //                     className="spotify-connect__button"
+    //                     onClick={() => this.setState({
+    //                         candidates: [],
+    //                         song: null,
+    //                         topArtists: null,
+    //                         topTracks: null,
+    //                         secondaryArtists: null,
+    //                         secondaryTracks: null,
+    //                         recentTracks: null,
+    //                         discoverWeekly: null,
+    //                         genreSeeds: null,
+    //                         generating: false,
+    //                         gettingReccomendations: false,
+    //                         candidatesFiltered: false,
+    //                         awaiting: {},
+    //                         awaitingFeatures: false,
+    //                         nothingKnown: false,
+    //                         submitted: false,
+    //                     })} >Start Again</Button>
+    //             </div>
+    //             :
+    //             !this.state.submitted ?
+    //                 <div>
+    //                     <Preferences 
+    //                         preferences={this.state.preferences}
+    //                         setPreferences={preferences => this.setState({preferences})} 
+    //                         showFamiliarity={true}
+    //                         showGenres={false}
+    //                     />
+    //                     <Button onClick={() => this.onClick()} className="spotify-connect__button" color="primary">Find Your Song</Button>
+    //                 </div>
+    //                 :
+    //                 <div>
+    //                     Finding you the perfect song...
+    //             </div>
+    //     );
+    // }
 }
 
 export default FindSongWithAccount;

@@ -29,3 +29,20 @@ padding-right: 10px;
     background: #007aff;
     border: none;
 }
+
+.preferences--time{
+    background-color: pink;
+}
+
+.preferences--song{
+    background-color: green;
+}
+
+.searching{
+    background-color: blue;
+}
+
+.song-result{
+    background-color: orange;
+}
+

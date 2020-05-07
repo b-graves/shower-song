@@ -68,8 +68,8 @@ onClickContinue = () => {
       <div className="App">
         {this.state.accessToken ?
           this.state.connectedToSpotifyAccount ?
-            <div><FindSongWithAccount accessToken={this.state.accessToken} /></div>
-            : <div><FindSongWithoutAccount accessToken={this.state.accessToken} /></div>
+            <FindSongWithAccount accessToken={this.state.accessToken} />
+            : <FindSongWithoutAccount accessToken={this.state.accessToken} />
           :
           <FullHeight className="start-page__background">
             <Container>
@@ -86,15 +86,15 @@ onClickContinue = () => {
                   <div className="start-page__tagline">
                     Find your perfect song for a shorter shower
                 </div>
-                  <div onClick={() => this.onClickConnect()} className="start-page__connect-button">
+                  <button onClick={() => this.onClickConnect()} className="start-page__connect-button">
                     Connect to Spotify
-                </div>
+                </button>
                   <div className="start-page__or">
                     or
                 </div>
-                  <div onClick={() => this.onClickContinue()}  className="start-page__continue-without-button">
+                  <button onClick={() => this.onClickContinue()}  className="start-page__continue-without-button">
                     Continue without Spotify
-                </div>
+                </button>
                 </Col>
               </Row>
             </Container>
