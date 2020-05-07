@@ -176,12 +176,6 @@ class FindSongWithoutAccount extends Component {
             }))
     }
 
-    async checkVideo(song) {
-        console.log(song)
-        let playlist = await scanFeed("https://www.youtube.com/results?search_query=" + song.name + " " + song.artists[0].name);
-        console.log(playlist)
-    }
-
     componentDidUpdate() {
         console.log(this.state.awaiting)
         if (!this.state.song && Object.values(this.state.awaiting).length > 0 && Object.values(this.state.awaiting).every(awaiting => !awaiting)) {
