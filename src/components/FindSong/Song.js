@@ -39,7 +39,7 @@ class Song extends Component {
                     method: 'POST'
                 })
             });
-        }, 5000);
+        }, 2000);
 
     }
 
