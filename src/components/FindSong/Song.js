@@ -64,6 +64,7 @@ class Song extends Component {
                         src={"https://www.youtube.com/embed?listType=search&list=" + this.props.song.external_ids.isrc}
                         frameborder="0"></iframe> : null}
                     <div>
+                        {this.props.song.name} - {this.props.song.artists[0].name}
                         Enjoy your {Math.round(this.msToMins(this.props.song.duration_ms) * 2) / 2} Minute Shower!
                         </div>
                 </div>
