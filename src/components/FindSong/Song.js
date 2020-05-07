@@ -39,7 +39,7 @@ class Song extends Component {
                     method: 'POST'
                 })
             });
-        }, 5000);
+        }, 10000);
 
     }
 
@@ -59,7 +59,7 @@ class Song extends Component {
                         var win = window.open("https://www.youtube.com/results?search_query=" + this.props.song.external_ids.isrc, '_blank');
                         win.focus();
                     }}>Listen on YouTube</Button>
-                    {this.props.showSpotify ? <iframe title={"track"} src={"https://open.spotify.com/embed/track/" + this.props.song.id} width={"100%"} height={"500px"} frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe> : null}
+                    {false ? <iframe title={"track"} src={"https://open.spotify.com/embed/track/" + this.props.song.id} width={"100%"} height={"500px"} frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe> : null}
                     {false ? <iframe title={"yt"} id="ytplayer" type="text/html" width={"100%"} height="360"
                         src={"https://www.youtube.com/embed?listType=search&list=" + this.props.song.external_ids.isrc}
                         frameborder="0"></iframe> : null}
