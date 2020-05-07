@@ -51,13 +51,8 @@ class Song extends Component {
                         this.autoPlay()
                         var win = window.open(this.props.song.external_urls.spotify, '_blank');
                         win.focus();
-                    }} >Listen on Spotify Online</Button>
+                    }} >Listen on Spotify</Button>
 
-                    <Button onClick={() => {
-                        this.autoPlay()
-                        var win = window.open(this.props.song.uri, '_blank');
-                        win.focus();
-                    }} >Listen on Spotify App</Button>
                     <Button onClick={() => {
                         var win = window.open("https://www.youtube.com/results?search_query=" + this.props.song.external_ids.isrc, '_blank');
                         win.focus();
