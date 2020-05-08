@@ -87,8 +87,15 @@ class FindSongWithAccount extends Component {
                 .then(data => {
                     if (!data.error) {
                         this.setState({ topArtists: data })
+                    } else {
+                        this.setState({ topArtists: { items: [] } })
                     }
-                }))
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "Could not load top artists" })
+                })
+            )
 
             url = new URL('https://api.spotify.com/v1/me/top/tracks');
             url.search = new URLSearchParams({ limit: 50 });
@@ -100,8 +107,15 @@ class FindSongWithAccount extends Component {
                 .then(data => {
                     if (!data.error) {
                         this.setState({ topTracks: data })
+                    } else {
+                        this.setState({ topTracks: { items: [] } })
                     }
-                }))
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "Could not load top tracks" })
+                })
+            )
 
             url = new URL('https://api.spotify.com/v1/me/albums');
             url.search = new URLSearchParams({ limit: 50 });
@@ -114,8 +128,15 @@ class FindSongWithAccount extends Component {
                 .then(data => {
                     if (!data.error) {
                         this.setState({ secondaryArtists: data.items.map(album => album.album.artists[0]) })
+                    } else {
+                        this.setState({ secondaryArtists: [] })
                     }
-                }))
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "Could not load top albums" })
+                })
+            )
 
             url = new URL('https://api.spotify.com/v1/me/tracks');
             url.search = new URLSearchParams({ limit: 50 });
@@ -127,8 +148,15 @@ class FindSongWithAccount extends Component {
                 .then(data => {
                     if (!data.error) {
                         this.setState({ secondaryTracks: data.items.map(track => track.track) })
+                    } else {
+                        this.setState({ secondaryTracks: [] })
                     }
-                }))
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "Could not load users tracks" })
+                })
+            )
 
             url = new URL('https://api.spotify.com/v1/me/playlists');
             url.search = new URLSearchParams({ limit: 50 });
@@ -152,12 +180,19 @@ class FindSongWithAccount extends Component {
                                     .then(data => {
                                         if (!data.error) {
                                             this.setState({ discoverWeekly: data.items.map(track => track.track) })
+                                        } else {
+                                            this.setState({ discoverWeekly: [] })
                                         }
                                     }))
                             }
                         })
                     }
-                }))
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "Could not load discover weekly" })
+                })
+            )
 
             url = new URL('https://api.spotify.com/v1/me/player/recently-played');
             url.search = new URLSearchParams({ limit: 50 });
@@ -169,8 +204,15 @@ class FindSongWithAccount extends Component {
                 .then(data => {
                     if (!data.error) {
                         this.setState({ recentTracks: data.items.map(track => track.track) })
+                    } else {
+                        this.setState({ recentTracks: [] })
                     }
-                }))
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "Could not load recently played" })
+                })
+            )
 
             url = new URL('https://api.spotify.com/v1/recommendations/available-genre-seeds');
             fetch(url.toString(), {
@@ -181,8 +223,15 @@ class FindSongWithAccount extends Component {
                 .then(data => {
                     if (!data.error) {
                         this.setState({ genreSeeds: data.genres });
+                    } else {
+                        this.setState({ genreSeeds: [] });
                     }
-                }))
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "Could not load genres" })
+                })
+            )
         }, 1000)
     }
 
@@ -211,7 +260,7 @@ class FindSongWithAccount extends Component {
             console.log(values)
         }
         let url = new URL('https://api.spotify.com/v1/recommendations');
-        values = this.shuffle(values.filter(value => value !== undefined))
+        values = this.shuffle(values.filter(value => value !== undefined || value !== null))
         for (let i = 0; i < values.length; i += 5) {
             url.search = new URLSearchParams({
                 limit: 20,
@@ -335,40 +384,34 @@ class FindSongWithAccount extends Component {
                 }
             }).then((response) => response.json()
                 .then(data => {
-                    if (!data.error) {
-                        if (data.audio_features[0] === null) {
-                            this.setState({
-                                candidates: [],
-                                song: null,
-                                generating: false,
-                                gettingReccomendations: false,
-                                candidatesFiltered: false,
-                                awaiting: {},
-                                awaitingFeatures: false,
-                                nothingKnown: true
-                            })
-                        } else {
-                            let audioFeatures = data.audio_features.map(features => {
-                                return {
-                                    ...features, mse: this.mse(
-                                        [features.energy, features.danceability, features.valence, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness],
-                                        [this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100]
-                                    )
-                                }
+                    if (!data.error && data.audio_features[0] !== null) {
+                        let audioFeatures = data.audio_features.map(features => {
+                            return {
+                                ...features, mse: this.mse(
+                                    [features.energy, features.danceability, features.valence, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness],
+                                    [this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100]
+                                )
                             }
-                            );
-                            audioFeatures.sort(function (a, b) { return a.mse - b.mse })
-                            let bestMatch = audioFeatures[0]
-                            console.log(bestMatch)
-                            this.state.candidates.forEach(candidate => {
-                                if (candidate.id === bestMatch.id) {
-                                    console.log(candidate)
-                                    this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
-                                }
-                            })
                         }
+                        );
+                        audioFeatures.sort(function (a, b) { return a.mse - b.mse })
+                        let bestMatch = audioFeatures[0]
+                        console.log(bestMatch)
+                        this.state.candidates.forEach(candidate => {
+                            if (candidate.id === bestMatch.id) {
+                                console.log(candidate)
+                                this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
+                            }
+                        })
+                    } else {
+                        this.setState({ song: this.state.candidates[0] }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
                     }
-                }))
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "could not get audio features" })
+                })
+            )
 
         })
     }
@@ -405,31 +448,34 @@ class FindSongWithAccount extends Component {
     }
 
     render() {
-        console.log(this.props.data)
+        
         return (
+            this.state.criticalError ?
+            <div>Something went wrong... {this.state.errorMessage}</div>
+            :
             <div>
-            {this.state.welcome || this.state.welcomeScroll ? 
-                <Element name="welcome">
-                    <FullHeight className="preferences preferences--time">
-                        <Container className="central-content time-container">
-                            <Row>
-                                <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                    <img className="welcome-page__logo" src={Logo} alt="Shower Song Logo" />
-                                    <div className="start-page__title">Shower Song</div>
-                                    <div className="welcome-page__message">
-                                        Welcome {this.props.data.user.display_name.split(" ")[0]}!
+                {this.state.welcome || this.state.welcomeScroll ?
+                    <Element name="welcome">
+                        <FullHeight className="preferences preferences--time">
+                            <Container className="central-content time-container">
+                                <Row>
+                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                        <img className="welcome-page__logo" src={Logo} alt="Shower Song Logo" />
+                                        <div className="start-page__title">Shower Song</div>
+                                        <div className="welcome-page__message">
+                                            Welcome {this.props.data.user.display_name.split(" ")[0]}!
                                     </div>
-                                    <div className="welcome-page__explain">
-                                        Your Spotify listening data will be used to find a song that fits your music taste and the length of shower you want to take...
+                                        <div className="welcome-page__explain">
+                                            Your Spotify listening data will be used to find a song that fits your music taste and the length of shower you want to take...
                                     </div>
 
-                                </Col>
-                            </Row>
-                        </Container>
-                        {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => {this.setState({welcome: false}, () => this.scrollToThen("time", () => this.setState({welcomeScroll: false})))}}>Get Started</button>}
-                    </FullHeight>
-                </Element>
-                : null}
+                                    </Col>
+                                </Row>
+                            </Container>
+                            {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => { this.setState({ welcome: false }, () => this.scrollToThen("time", () => this.setState({ welcomeScroll: false }))) }}>Get Started</button>}
+                        </FullHeight>
+                    </Element>
+                    : null}
                 {this.state.welcome || this.state.song || this.state.recap ? null : <Element name="time">
 
                     <FullHeight className="preferences preferences--time">
@@ -487,7 +533,7 @@ class FindSongWithAccount extends Component {
                             <Container>
                                 <Row>
                                     <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                    <img className="recap-page__logo" src={Logo} alt="Shower Song Logo" />
+                                        <img className="recap-page__logo" src={Logo} alt="Shower Song Logo" />
                                         <div className="recap-page__title">Shower Song</div>
                                         <div className="recap__time">
                                             <div className="preferences__question preferences__question--time">
