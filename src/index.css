@@ -14,9 +14,9 @@ body {
   background-size: 800% 800%;
 
 
-  -webkit-animation: shower-song-background 28s ease infinite;
-  -moz-animation: shower-song-background 28s ease infinite;
-  animation: shower-song-background 28s ease infinite;
+  -webkit-animation: shower-song-background 40s ease infinite;
+  -moz-animation: shower-song-background 40s ease infinite;
+  animation: shower-song-background 40s ease infinite;
 }
 
 @-webkit-keyframes shower-song-background {

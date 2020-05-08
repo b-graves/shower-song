@@ -34,7 +34,7 @@ class App extends Component {
     } else {
       window.location = "http://shower-song-backend.herokuapp.com/login"
     }
-    this.setState({connecting: true})
+    this.setState({ stateKnown: true, connecting: true })
   }
 
   onClickContinue = () => {
@@ -44,7 +44,7 @@ class App extends Component {
     } else {
       window.location = "http://shower-song-backend.herokuapp.com/appauth"
     }
-    this.setState({stateKnown: false})
+    this.setState({ stateKnown: false })
   }
 
 
@@ -60,10 +60,32 @@ class App extends Component {
         .then(data => {
           if (!data.error) {
             this.setState({ stateKnown: true, connectedToSpotifyAccount: true, accessToken, serverData: { ...this.state.serverData, user: data } })
+          } else {
+            this.onClickConnect()
           }
         }))
+        .catch((error) => {
+          this.onClickConnect();
+        })
+    } else if (parsed.grant_type === "client_credentials") {
+      const url = new URL('https://api.spotify.com/v1/recommendations/available-genre-seeds');
+      fetch(url.toString(), {
+        headers: {
+          "Authorization": "Bearer " + accessToken
+        }
+      }).then((response) => response.json()
+        .then(data => {
+          if (!data.error) {
+            this.setState({ accessToken, stateKnown: true })
+          } else {
+            this.onClickContinue();
+          }
+        }))
+        .catch((error) => {
+          this.onClickConnect();
+        })
     } else {
-      this.setState({ accessToken, stateKnown: true })
+      this.setState({ stateKnown: true })
     }
   }
 
@@ -76,7 +98,7 @@ class App extends Component {
           !this.state.connecting ?
             this.state.accessToken ?
               this.state.connectedToSpotifyAccount ?
-                <FindSongWithAccount data={this.state.serverData} accessToken={this.state.accessToken} />
+                <FindSongWithAccount reconnect={() => this.onClickConnect()} data={this.state.serverData} accessToken={this.state.accessToken} />
                 : <FindSongWithoutAccount accessToken={this.state.accessToken} />
               :
               <FullHeight className="start-page__background">
@@ -120,19 +142,19 @@ class App extends Component {
                 </Row>
               </Container>
             </FullHeight>
-            :
-        <FullHeight>
-          <Container className="central-content">
-            <Row>
-              <Col sm="12" md={{ size: 6, offset: 3 }}>
-                <img src={Animation} width={"50%"} alt="loading animation " />
-                <div>
-                  Loading...
+          :
+          <FullHeight>
+            <Container className="central-content">
+              <Row>
+                <Col sm="12" md={{ size: 6, offset: 3 }}>
+                  <img src={Animation} width={"50%"} alt="loading animation " />
+                  <div>
+                    Loading...
                 </div>
-              </Col>
-            </Row>
-          </Container>
-        </FullHeight>
+                </Col>
+              </Row>
+            </Container>
+          </FullHeight>
         }
       </div >
     );

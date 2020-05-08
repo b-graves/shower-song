@@ -158,6 +158,7 @@ class FindSongWithAccount extends Component {
                 })
             )
 
+            let found = false
             url = new URL('https://api.spotify.com/v1/me/playlists');
             url.search = new URLSearchParams({ limit: 50 });
             fetch(url.toString(), {
@@ -167,7 +168,6 @@ class FindSongWithAccount extends Component {
             }).then((response) => response.json()
                 .then(data => {
                     if (!data.error) {
-                        let found = false
                         data.items.forEach(playlist => {
                             if (playlist.name === "Discover Weekly") {
                                 found = true;
@@ -187,9 +187,6 @@ class FindSongWithAccount extends Component {
                                     }))
                             }
                         })
-                        if (!found) {
-                            this.setState({ discoverWeekly: [] })
-                        }
                     }
                 })
                 .catch((error) => {
@@ -197,6 +194,9 @@ class FindSongWithAccount extends Component {
                     this.setState({ criticalError: true, errorMessage: "Could not load discover weekly" })
                 })
             )
+            if (!found) {
+                this.setState({ discoverWeekly: [] })
+            }
 
             url = new URL('https://api.spotify.com/v1/me/player/recently-played');
             url.search = new URLSearchParams({ limit: 50 });
@@ -264,7 +264,7 @@ class FindSongWithAccount extends Component {
             console.log(values)
         }
         let url = new URL('https://api.spotify.com/v1/recommendations');
-        values = this.shuffle(values.filter(value => value !== undefined || value !== null))
+        values = this.shuffle(values.filter(value => value !== undefined && value !== null))
         for (let i = 0; i < values.length; i += 5) {
             url.search = new URLSearchParams({
                 limit: 20,
@@ -375,59 +375,64 @@ class FindSongWithAccount extends Component {
     }
 
     getFeatures = () => {
-        this.setState({ awaitingFeatures: true }, () => {
-            let url = new URL('https://api.spotify.com/v1/audio-features');
+        if (this.state.candidates.length === 0) {
+            this.setState({ criticalError: true, errorMessage: "no songs" })
+        } else {
+            this.setState({ awaitingFeatures: true }, () => {
+                let url = new URL('https://api.spotify.com/v1/audio-features');
 
-            url.search = new URLSearchParams({
-                ids: this.state.candidates.slice(0, 100).map(candidate => candidate.id)
-            });
+                url.search = new URLSearchParams({
+                    ids: this.state.candidates.slice(0, 100).map(candidate => candidate.id)
+                });
 
-            fetch(url.toString(), {
-                headers: {
-                    "Authorization": "Bearer " + this.props.accessToken
-                }
-            }).then((response) => response.json()
-                .then(data => {
-                    if (!data.error && data.audio_features[0] !== null) {
-                        let audioFeatures = data.audio_features.map(features => {
-                            return {
-                                ...features, mse: this.mse(
-                                    [features.energy, features.danceability, features.valence, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness],
-                                    [this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100]
-                                )
-                            }
-                        }
-                        );
-                        audioFeatures.sort(function (a, b) { return a.mse - b.mse })
-                        // let bestMatch = audioFeatures[0]
-                        console.log(audioFeatures)
-                        let bestMatch = this.randomItem(audioFeatures.slice(0, 10));
-                        this.state.candidates.forEach(candidate => {
-                            if (candidate.id === bestMatch.id) {
-                                
-                                this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
-                            }
-                        })
-                    } else {
-                        this.setState({ song: this.state.candidates[0] }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
+                fetch(url.toString(), {
+                    headers: {
+                        "Authorization": "Bearer " + this.props.accessToken
                     }
-                })
-                .catch((error) => {
-                    console.log(error)
-                    this.setState({ criticalError: true, errorMessage: "could not get audio features" })
-                })
-            )
+                }).then((response) => response.json()
+                    .then(data => {
+                        if (!data.error && data.audio_features[0] !== null) {
+                            let audioFeatures = data.audio_features.map(features => {
+                                return {
+                                    ...features, mse: this.mse(
+                                        [features.energy, features.danceability, features.valence, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness],
+                                        [this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100]
+                                    )
+                                }
+                            }
+                            );
+                            audioFeatures.sort(function (a, b) { return a.mse - b.mse })
+                            // let bestMatch = audioFeatures[0]
+                            console.log(audioFeatures)
+                            let bestMatch = this.randomItem(audioFeatures.slice(0, 5));
+                            this.state.candidates.forEach(candidate => {
+                                if (candidate.id === bestMatch.id) {
+                                    this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
+                                }
+                            })
+                        } else {
+                            this.setState({ song: this.state.candidates[0] }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
+                        }
+                    })
+                    .catch((error) => {
+                        console.log(error)
+                        this.setState({ criticalError: true, errorMessage: "could not get audio features" })
+                    })
+                )
 
-        })
+            })
+        }
     }
 
     componentDidUpdate() {
-        if (!this.state.song && this.state.discoverWeekly && this.state.topArtists && this.state.topTracks && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
-            this.getCandidates()
-        } else if (!this.state.candidatesFiltered && Object.values(this.state.awaiting).every(awaiting => !awaiting) && this.state.generating && !this.state.gettingReccomendations) {
-            this.filterCandidates()
-        } else if (this.state.candidatesFiltered && !this.state.awaitingFeatures) {
-            this.getFeatures()
+        if (!this.state.criticalError) {
+            if (!this.state.song && this.state.discoverWeekly && this.state.topArtists && this.state.topTracks && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
+                this.getCandidates()
+            } else if (!this.state.candidatesFiltered && Object.values(this.state.awaiting).every(awaiting => !awaiting) && this.state.generating && !this.state.gettingReccomendations) {
+                this.filterCandidates()
+            } else if (this.state.candidatesFiltered && !this.state.awaitingFeatures) {
+                this.getFeatures()
+            }
         }
     }
 
@@ -453,65 +458,116 @@ class FindSongWithAccount extends Component {
     }
 
     render() {
-        
+
         return (
             this.state.criticalError ?
-            <div>Something went wrong... {this.state.errorMessage}</div>
-            :
-            <div>
-                {this.state.welcome || this.state.welcomeScroll ?
-                    <Element name="welcome">
+                <FullHeight className="preferences">
+                    <Container className="central-content time-container">
+                        <Row>
+                            <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                <div>Something went wrong...</div>
+                                <button className="error-button" onClick={() => this.props.reconnect()}>Try Again</button>
+                                <div className="error-message">Error: {this.state.errorMessage}</div>
+                            </Col>
+                        </Row>
+                    </Container>
+                </FullHeight>
+                :
+                <div>
+                    {this.state.welcome || this.state.welcomeScroll ?
+                        <Element name="welcome">
+                            <FullHeight className="preferences preferences--time">
+                                <Container className="central-content time-container">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <img className="welcome-page__logo" src={Logo} alt="Shower Song Logo" />
+                                            <div className="start-page__title">Shower Song</div>
+                                            <div className="welcome-page__message">
+                                                Welcome {this.props.data.user.display_name.split(" ")[0]}!
+                                    </div>
+                                            <div className="welcome-page__explain">
+                                                Your Spotify listening data will be used to find a song that fits your music taste and the length of shower you want to take...
+                                    </div>
+
+                                        </Col>
+                                    </Row>
+                                </Container>
+                                {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => { this.setState({ welcome: false }, () => this.scrollToThen("time", () => this.setState({ welcomeScroll: false }))) }}>Get Started</button>}
+                            </FullHeight>
+                        </Element>
+                        : null}
+                    {this.state.welcome || this.state.song || this.state.recap ? null : <Element name="time">
+
                         <FullHeight className="preferences preferences--time">
                             <Container className="central-content time-container">
                                 <Row>
                                     <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                        <img className="welcome-page__logo" src={Logo} alt="Shower Song Logo" />
-                                        <div className="start-page__title">Shower Song</div>
-                                        <div className="welcome-page__message">
-                                            Welcome {this.props.data.user.display_name.split(" ")[0]}!
-                                    </div>
-                                        <div className="welcome-page__explain">
-                                            Your Spotify listening data will be used to find a song that fits your music taste and the length of shower you want to take...
-                                    </div>
-
+                                        <div className="preferences__question preferences__question--time">
+                                            How many minutes would you like to spend in the shower?
+                                        </div>
+                                        <Preferences
+                                            preferences={this.state.preferences}
+                                            setPreferences={preferences => this.setState({ preferences })}
+                                            showTime={true}
+                                            showFamiliarity={false}
+                                            showGenres={false}
+                                            showOptions={false}
+                                        />
                                     </Col>
                                 </Row>
                             </Container>
-                            {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => { this.setState({ welcome: false }, () => this.scrollToThen("time", () => this.setState({ welcomeScroll: false }))) }}>Get Started</button>}
+                            {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>}
                         </FullHeight>
-                    </Element>
-                    : null}
-                {this.state.welcome || this.state.song || this.state.recap ? null : <Element name="time">
 
-                    <FullHeight className="preferences preferences--time">
-                        <Container className="central-content time-container">
-                            <Row>
-                                <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                    <div className="preferences__question preferences__question--time">
-                                        How many minutes would you like to spend in the shower?
+                    </Element>}
+                    {this.state.timeSubmitted ?
+                        !this.state.song && !this.state.recap ?
+                            <Element name="options">
+                                <FullHeight className="preferences preferences--options">
+                                    <Container className="central-content">
+                                        <Row>
+                                            <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                                <div className="preferences__question preferences__question--options">
+                                                    What type of song are you in the mood for?
                                         </div>
-                                    <Preferences
-                                        preferences={this.state.preferences}
-                                        setPreferences={preferences => this.setState({ preferences })}
-                                        showTime={true}
-                                        showFamiliarity={false}
-                                        showGenres={false}
-                                        showOptions={false}
-                                    />
-                                </Col>
-                            </Row>
-                        </Container>
-                        {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>}
-                    </FullHeight>
-
-                </Element>}
-                {this.state.timeSubmitted ?
-                    !this.state.song && !this.state.recap ?
-                        <Element name="options">
+                                                <Preferences
+                                                    preferences={this.state.preferences}
+                                                    setPreferences={preferences => this.setState({ preferences })}
+                                                    showTime={false}
+                                                    showFamiliarity={true}
+                                                    showGenres={false}
+                                                    showOptions={true}
+                                                />
+                                            </Col>
+                                        </Row>
+                                    </Container>
+                                    <button className="preferences__continue-button"
+                                        onClick={() => {
+                                            this.submitPreferences();
+                                        }}
+                                    >Find your perfect song</button>
+                                </FullHeight>
+                            </Element>
+                            :
                             <FullHeight className="preferences preferences--options">
-                                <Container className="central-content">
+                                <Container>
                                     <Row>
                                         <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <img className="recap-page__logo" src={Logo} alt="Shower Song Logo" />
+                                            <div className="recap-page__title">Shower Song</div>
+                                            <div className="recap__time">
+                                                <div className="preferences__question preferences__question--time">
+                                                    How many minutes would you like to spend in the shower?
+                                        </div>
+                                                <Preferences
+                                                    preferences={this.state.preferences}
+                                                    setPreferences={preferences => this.setState({ preferences })}
+                                                    showTime={true}
+                                                    showFamiliarity={false}
+                                                    showGenres={false}
+                                                    showOptions={false}
+                                                />
+                                            </div>
                                             <div className="preferences__question preferences__question--options">
                                                 What type of song are you in the mood for?
                                         </div>
@@ -525,94 +581,53 @@ class FindSongWithAccount extends Component {
                                             />
                                         </Col>
                                     </Row>
+                                    <button className="preferences__continue-button--inline"
+                                        onClick={() => {
+                                            this.submitPreferences();
+                                        }}
+                                    >Find your perfect song</button>
                                 </Container>
-                                <button className="preferences__continue-button"
-                                    onClick={() => {
-                                        this.submitPreferences();
-                                    }}
-                                >Find your perfect song</button>
+                            </FullHeight>
+                        : null}
+                    {this.state.submitted ?
+                        <Element name="searching">
+                            <FullHeight className="searching">
+                                <Container className="central-content">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <div>
+                                                <img src={Animation} width={"50%"} alt="loading animation " />
+                                                <div>
+                                                    Finding Your Perfect Shower Song...
+                                            </div>
+                                            </div>
+                                        </Col>
+                                    </Row>
+                                </Container>
                             </FullHeight>
                         </Element>
-                        :
-                        <FullHeight className="preferences preferences--options">
-                            <Container>
-                                <Row>
-                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                        <img className="recap-page__logo" src={Logo} alt="Shower Song Logo" />
-                                        <div className="recap-page__title">Shower Song</div>
-                                        <div className="recap__time">
-                                            <div className="preferences__question preferences__question--time">
-                                                How many minutes would you like to spend in the shower?
-                                        </div>
-                                            <Preferences
+                        : null}
+                    {this.state.song ?
+                        <Element name="result">
+                            <FullHeight className="song-result result-page__background" >
+                                <Container className="central-content">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <Song
+                                                song={this.state.song}
                                                 preferences={this.state.preferences}
-                                                setPreferences={preferences => this.setState({ preferences })}
-                                                showTime={true}
-                                                showFamiliarity={false}
-                                                showGenres={false}
-                                                showOptions={false}
+                                                nothingKnown={this.state.nothingKnown}
+                                                showSpotify={true}
+                                                showYouTube={false}
+                                                accessToken={this.props.accessToken}
                                             />
-                                        </div>
-                                        <div className="preferences__question preferences__question--options">
-                                            What type of song are you in the mood for?
-                                        </div>
-                                        <Preferences
-                                            preferences={this.state.preferences}
-                                            setPreferences={preferences => this.setState({ preferences })}
-                                            showTime={false}
-                                            showFamiliarity={true}
-                                            showGenres={false}
-                                            showOptions={true}
-                                        />
-                                    </Col>
-                                </Row>
-                                <button className="preferences__continue-button--inline"
-                                    onClick={() => {
-                                        this.submitPreferences();
-                                    }}
-                                >Find your perfect song</button>
-                            </Container>
-                        </FullHeight>
-                    : null}
-                {this.state.submitted ?
-                    <Element name="searching">
-                        <FullHeight className="searching">
-                            <Container className="central-content">
-                                <Row>
-                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                        <div>
-                                            <img src={Animation} width={"50%"} alt="loading animation " />
-                                            <div>
-                                                Finding Your Perfect Shower Song...
-                                            </div>
-                                        </div>
-                                    </Col>
-                                </Row>
-                            </Container>
-                        </FullHeight>
-                    </Element>
-                    : null}
-                {this.state.song ?
-                    <Element name="result">
-                        <FullHeight className="song-result result-page__background" >
-                            <Container className="central-content">
-                                <Row>
-                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                        <Song
-                                            song={this.state.song}
-                                            preferences={this.state.preferences}
-                                            nothingKnown={this.state.nothingKnown}
-                                            showSpotify={true}
-                                            showYouTube={false}
-                                            accessToken={this.props.accessToken}
-                                        />
-                                    </Col>
-                                </Row>
-                            </Container>
-                        </FullHeight>
-                    </Element>
-                    : null}
-            </div>
+                                        </Col>
+                                    </Row>
+                                </Container>
+                            </FullHeight>
+                        </Element>
+                        : null}
+                </div>
 
 
         )

@@ -159,6 +159,18 @@ padding-right: 10px;
     width: 80%;
     margin: 5% 10%;
     box-shadow: 0 4px 12px -6px black;
+    max-width: 350px;
+}
+
+.error-button {
+    margin: 10px;
+    background-color: transparent;
+    max-width: 250px;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    border-radius: 100px;
+    box-shadow: 0 4px 12px -6px black;
 }
 
 .song__name {
