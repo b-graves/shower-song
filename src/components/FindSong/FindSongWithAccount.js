@@ -399,11 +399,12 @@ class FindSongWithAccount extends Component {
                         }
                         );
                         audioFeatures.sort(function (a, b) { return a.mse - b.mse })
-                        let bestMatch = audioFeatures[0]
-                        console.log(bestMatch)
+                        // let bestMatch = audioFeatures[0]
+                        console.log(audioFeatures)
+                        let bestMatch = this.randomItem(audioFeatures.slice(0, 10));
                         this.state.candidates.forEach(candidate => {
                             if (candidate.id === bestMatch.id) {
-                                console.log(candidate)
+                                
                                 this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
                             }
                         })
