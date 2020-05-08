@@ -51,7 +51,24 @@ class FindSongWithAccount extends Component {
     }
 
     submitPreferences = () => {
-        this.setState({ submitted: true }, () => this.scrollTo("searching"))
+        this.setState({ 
+            submitted: true,
+            candidates: [],
+            song: null,
+            topArtists: null,
+            topTracks: null,
+            secondaryArtists: null,
+            secondaryTracks: null,
+            recentTracks: null,
+            discoverWeekly: null,
+            genreSeeds: null,
+            generating: false,
+            gettingReccomendations: false,
+            candidatesFiltered: false,
+            awaiting: {},
+            awaitingFeatures: false,
+            nothingKnown: false,
+        }, () => this.scrollTo("searching"))
         setTimeout(() => {
             let url = new URL('https://api.spotify.com/v1/me/top/artists');
             url.search = new URLSearchParams({ limit: 50 });
@@ -219,6 +236,9 @@ class FindSongWithAccount extends Component {
                         this.setState({ awaiting: { [type + i]: false } })
                     }
                 }))
+                .catch((error) => {
+                    console.log(error)
+                  })
         }
     }
 
@@ -337,7 +357,7 @@ class FindSongWithAccount extends Component {
                             this.state.candidates.forEach(candidate => {
                                 if (candidate.id === bestMatch.id) {
                                     console.log(candidate)
-                                    this.setState({ song: candidate }, () => this.scrollTo("result"))
+                                    this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({submitted: false})))
                                 }
                             })
                         }
@@ -367,40 +387,46 @@ class FindSongWithAccount extends Component {
         })
     }
 
+    scrollToThen(section, callback) {
+        // scroll.scrollToBottom();
+        scroller.scrollTo(section, {
+            duration: 750,
+            delay: 0,
+            smooth: true,
+            offset: 0
+        })
+        setTimeout(() => callback(), 750)
+    }
+
     render() {
         return (
             <div >
                 <Element name="time">
-                    <FullHeight className="preferences--time">
-                        <ScrollLock>
-                            <div className="preferences">
-                                <Container className="central-content time-container">
-                                    <Row>
-                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                            <div className="preferences__question preferences__question--time">
-                                                How many minutes would you like to spend in the shower?
+                    <FullHeight className="preferences preferences--time">
+                        <Container className="central-content time-container">
+                            <Row>
+                                <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                    <div className="preferences__question preferences__question--time">
+                                        How many minutes would you like to spend in the shower?
                                         </div>
-                                            <Preferences
-                                                preferences={this.state.preferences}
-                                                setPreferences={preferences => this.setState({ preferences })}
-                                                showTime={true}
-                                                showFamiliarity={false}
-                                                showGenres={false}
-                                                showOptions={false}
-                                            />
-                                        </Col>
-                                    </Row>
-                                </Container>
-                                <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>
-                            </div>
-                        </ScrollLock>
+                                    <Preferences
+                                        preferences={this.state.preferences}
+                                        setPreferences={preferences => this.setState({ preferences })}
+                                        showTime={true}
+                                        showFamiliarity={false}
+                                        showGenres={false}
+                                        showOptions={false}
+                                    />
+                                </Col>
+                            </Row>
+                        </Container>
+                        <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>
                     </FullHeight>
 
                 </Element>
                 {this.state.timeSubmitted ?
                     <Element name="options">
                         <FullHeight className="preferences preferences--options">
-                            <button className="preferences__back-button" onClick={() => this.scrollTo("time")}><IoIosArrowUp /></button>
                             <Container className="central-content">
                                 <Row>
                                     <Col sm="12" md={{ size: 6, offset: 3 }}>
@@ -465,6 +491,7 @@ class FindSongWithAccount extends Component {
                     </Element>
                     : null}
             </div>
+
 
         )
     }
