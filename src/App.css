@@ -138,6 +138,25 @@ transform: translateY(-75%);
   margin-bottom: 2px;
 }
 
+.recap__time {
+  min-height: 150px;
+  margin-top: 10px;
+}
+
+.recap-page__logo{
+  width: 20%;
+  display: inline-block;
+  margin-right: 10px;
+  position: relative;
+  bottom: 3px;
+
+}
+
+.recap-page__title {
+  display: inline-block;
+  font-size: 2em;
+}
+
 
 
 

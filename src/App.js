@@ -70,7 +70,7 @@ onClickContinue = () => {
       <div className="App">
         {this.state.accessToken ?
           this.state.connectedToSpotifyAccount ?
-            <FindSongWithAccount accessToken={this.state.accessToken} />
+            <FindSongWithAccount data={this.state.serverData} accessToken={this.state.accessToken} />
             : <FindSongWithoutAccount accessToken={this.state.accessToken} />
           :
           <FullHeight className="start-page__background">

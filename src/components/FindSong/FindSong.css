@@ -64,7 +64,17 @@ padding-right: 10px;
     left: 50%;
     width: 100%;
     margin-left: -125px;
-    bottom: 5%;
+    bottom: 10%;
+    background-color: transparent;
+    max-width: 250px;
+    padding: 10px;
+    border: none;
+    border-radius: 100px;
+    box-shadow: 0 4px 12px -6px black;
+}
+
+.preferences__continue-button--inline{
+    width: 100%;
     background-color: transparent;
     max-width: 250px;
     padding: 10px;
@@ -179,3 +189,15 @@ padding-right: 10px;
     background-color: #f70302;
 }
 
+.welcome-page__logo {
+    width: 70%
+}
+
+.welcome-page__message {
+    font-size: 1.3em
+}
+
+.welcome-page__explain {
+    padding: 10px;
+    padding-bottom: 70px;
+}

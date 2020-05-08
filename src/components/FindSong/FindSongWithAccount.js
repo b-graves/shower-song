@@ -19,9 +19,13 @@ import { Link, Element, Events, animateScroll as scroll, scrollSpy, scroller } f
 
 import { IoIosArrowUp } from 'react-icons/io';
 
+import Logo from "../../assets/logo.svg"
+
 class FindSongWithAccount extends Component {
     state = {
         candidates: [],
+        welcome: true,
+        welcomeScroll: true,
         song: null,
         topArtists: null,
         topTracks: null,
@@ -38,6 +42,7 @@ class FindSongWithAccount extends Component {
         nothingKnown: false,
         submitted: false,
         timeSubmitted: false,
+        recap: false,
         preferences: {
             familiar: false,
             energy: 50,
@@ -51,8 +56,9 @@ class FindSongWithAccount extends Component {
     }
 
     submitPreferences = () => {
-        this.setState({ 
+        this.setState({
             submitted: true,
+            recap: true,
             candidates: [],
             song: null,
             topArtists: null,
@@ -238,7 +244,7 @@ class FindSongWithAccount extends Component {
                 }))
                 .catch((error) => {
                     console.log(error)
-                  })
+                })
         }
     }
 
@@ -357,7 +363,7 @@ class FindSongWithAccount extends Component {
                             this.state.candidates.forEach(candidate => {
                                 if (candidate.id === bestMatch.id) {
                                     console.log(candidate)
-                                    this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({submitted: false})))
+                                    this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
                                 }
                             })
                         }
@@ -399,9 +405,33 @@ class FindSongWithAccount extends Component {
     }
 
     render() {
+        console.log(this.props.data)
         return (
-            <div >
-                <Element name="time">
+            <div>
+            {this.state.welcome || this.state.welcomeScroll ? 
+                <Element name="welcome">
+                    <FullHeight className="preferences preferences--time">
+                        <Container className="central-content time-container">
+                            <Row>
+                                <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                    <img className="welcome-page__logo" src={Logo} alt="Shower Song Logo" />
+                                    <div className="start-page__title">Shower Song</div>
+                                    <div className="welcome-page__message">
+                                        Welcome {this.props.data.user.display_name.split(" ")[0]}!
+                                    </div>
+                                    <div className="welcome-page__explain">
+                                        Your Spotify listening data will be used to find a song that fits your music taste...
+                                    </div>
+
+                                </Col>
+                            </Row>
+                        </Container>
+                        {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => {this.setState({welcome: false}, () => this.scrollToThen("time", () => this.setState({welcomeScroll: false})))}}>Get Started</button>}
+                    </FullHeight>
+                </Element>
+                : null}
+                {this.state.welcome || this.state.song || this.state.recap ? null : <Element name="time">
+
                     <FullHeight className="preferences preferences--time">
                         <Container className="central-content time-container">
                             <Row>
@@ -420,16 +450,58 @@ class FindSongWithAccount extends Component {
                                 </Col>
                             </Row>
                         </Container>
-                        <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>
+                        {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>}
                     </FullHeight>
 
-                </Element>
+                </Element>}
                 {this.state.timeSubmitted ?
-                    <Element name="options">
+                    !this.state.song && !this.state.recap ?
+                        <Element name="options">
+                            <FullHeight className="preferences preferences--options">
+                                <Container className="central-content">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <div className="preferences__question preferences__question--options">
+                                                What type of song are you in the mood for?
+                                        </div>
+                                            <Preferences
+                                                preferences={this.state.preferences}
+                                                setPreferences={preferences => this.setState({ preferences })}
+                                                showTime={false}
+                                                showFamiliarity={true}
+                                                showGenres={false}
+                                                showOptions={true}
+                                            />
+                                        </Col>
+                                    </Row>
+                                </Container>
+                                <button className="preferences__continue-button"
+                                    onClick={() => {
+                                        this.submitPreferences();
+                                    }}
+                                >Find your perfect song</button>
+                            </FullHeight>
+                        </Element>
+                        :
                         <FullHeight className="preferences preferences--options">
-                            <Container className="central-content">
+                            <Container>
                                 <Row>
                                     <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                    <img className="recap-page__logo" src={Logo} alt="Shower Song Logo" />
+                                        <div className="recap-page__title">Shower Song</div>
+                                        <div className="recap__time">
+                                            <div className="preferences__question preferences__question--time">
+                                                How many minutes would you like to spend in the shower?
+                                        </div>
+                                            <Preferences
+                                                preferences={this.state.preferences}
+                                                setPreferences={preferences => this.setState({ preferences })}
+                                                showTime={true}
+                                                showFamiliarity={false}
+                                                showGenres={false}
+                                                showOptions={false}
+                                            />
+                                        </div>
                                         <div className="preferences__question preferences__question--options">
                                             What type of song are you in the mood for?
                                         </div>
@@ -443,14 +515,13 @@ class FindSongWithAccount extends Component {
                                         />
                                     </Col>
                                 </Row>
+                                <button className="preferences__continue-button--inline"
+                                    onClick={() => {
+                                        this.submitPreferences();
+                                    }}
+                                >Find your perfect song</button>
                             </Container>
-                            <button className="preferences__continue-button"
-                                onClick={() => {
-                                    this.submitPreferences();
-                                }}
-                            >Find your perfect song</button>
                         </FullHeight>
-                    </Element>
                     : null}
                 {this.state.submitted ?
                     <Element name="searching">
