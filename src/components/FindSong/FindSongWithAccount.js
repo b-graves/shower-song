@@ -167,9 +167,10 @@ class FindSongWithAccount extends Component {
             }).then((response) => response.json()
                 .then(data => {
                     if (!data.error) {
+                        let found = false
                         data.items.forEach(playlist => {
                             if (playlist.name === "Discover Weekly") {
-
+                                found = true;
                                 url = new URL('https://api.spotify.com/v1/playlists/' + playlist.id + '/tracks');
                                 url.search = new URLSearchParams({ limit: 50 });
                                 fetch(url.toString(), {
@@ -186,6 +187,9 @@ class FindSongWithAccount extends Component {
                                     }))
                             }
                         })
+                        if (!found) {
+                            this.setState({ discoverWeekly: [] })
+                        }
                     }
                 })
                 .catch((error) => {
