@@ -420,7 +420,7 @@ class FindSongWithAccount extends Component {
                                         Welcome {this.props.data.user.display_name.split(" ")[0]}!
                                     </div>
                                     <div className="welcome-page__explain">
-                                        Your Spotify listening data will be used to find a song that fits your music taste...
+                                        Your Spotify listening data will be used to find a song that fits your music taste and the length of shower you want to take...
                                     </div>
 
                                 </Col>
