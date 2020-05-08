@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Container, CustomInput, Form, FormGroup, Label } from 'reactstrap';
+import { Button, Container, Row, Col, CustomInput, Form, FormGroup, Label } from 'reactstrap';
 
 import 'rc-slider/assets/index.css';
 import Slider from 'rc-slider';
@@ -13,8 +13,11 @@ import FullHeight from "react-full-height";
 
 import ScrollLock, { TouchScrollable } from 'react-scrolllock';
 
+import Animation from "../../assets/animation.gif"
 
 import { Link, Element, Events, animateScroll as scroll, scrollSpy, scroller } from 'react-scroll'
+
+import { IoIosArrowUp } from 'react-icons/io';
 
 class FindSongWithAccount extends Component {
     state = {
@@ -34,6 +37,7 @@ class FindSongWithAccount extends Component {
         awaitingFeatures: false,
         nothingKnown: false,
         submitted: false,
+        timeSubmitted: false,
         preferences: {
             familiar: false,
             energy: 50,
@@ -46,115 +50,117 @@ class FindSongWithAccount extends Component {
         }
     }
 
-    onClick = () => {
-        this.setState({ submitted: true })
-        let url = new URL('https://api.spotify.com/v1/me/top/artists');
-        url.search = new URLSearchParams({ limit: 50 });
-        fetch(url.toString(), {
-            headers: {
-                "Authorization": "Bearer " + this.props.accessToken,
+    submitPreferences = () => {
+        this.setState({ submitted: true }, () => this.scrollTo("searching"))
+        setTimeout(() => {
+            let url = new URL('https://api.spotify.com/v1/me/top/artists');
+            url.search = new URLSearchParams({ limit: 50 });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken,
 
-            }
-        }).then((response) => response.json()
-            .then(data => {
-                if (!data.error) {
-                    this.setState({ topArtists: data })
                 }
-            }))
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        this.setState({ topArtists: data })
+                    }
+                }))
 
-        url = new URL('https://api.spotify.com/v1/me/top/tracks');
-        url.search = new URLSearchParams({ limit: 50 });
-        fetch(url.toString(), {
-            headers: {
-                "Authorization": "Bearer " + this.props.accessToken
-            }
-        }).then((response) => response.json()
-            .then(data => {
-                if (!data.error) {
-                    this.setState({ topTracks: data })
+            url = new URL('https://api.spotify.com/v1/me/top/tracks');
+            url.search = new URLSearchParams({ limit: 50 });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken
                 }
-            }))
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        this.setState({ topTracks: data })
+                    }
+                }))
 
-        url = new URL('https://api.spotify.com/v1/me/albums');
-        url.search = new URLSearchParams({ limit: 50 });
-        fetch(url.toString(), {
-            headers: {
-                "Authorization": "Bearer " + this.props.accessToken,
+            url = new URL('https://api.spotify.com/v1/me/albums');
+            url.search = new URLSearchParams({ limit: 50 });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken,
 
-            }
-        }).then((response) => response.json()
-            .then(data => {
-                if (!data.error) {
-                    this.setState({ secondaryArtists: data.items.map(album => album.album.artists[0]) })
                 }
-            }))
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        this.setState({ secondaryArtists: data.items.map(album => album.album.artists[0]) })
+                    }
+                }))
 
-        url = new URL('https://api.spotify.com/v1/me/tracks');
-        url.search = new URLSearchParams({ limit: 50 });
-        fetch(url.toString(), {
-            headers: {
-                "Authorization": "Bearer " + this.props.accessToken
-            }
-        }).then((response) => response.json()
-            .then(data => {
-                if (!data.error) {
-                    this.setState({ secondaryTracks: data.items.map(track => track.track) })
+            url = new URL('https://api.spotify.com/v1/me/tracks');
+            url.search = new URLSearchParams({ limit: 50 });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken
                 }
-            }))
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        this.setState({ secondaryTracks: data.items.map(track => track.track) })
+                    }
+                }))
 
-        url = new URL('https://api.spotify.com/v1/me/playlists');
-        url.search = new URLSearchParams({ limit: 50 });
-        fetch(url.toString(), {
-            headers: {
-                "Authorization": "Bearer " + this.props.accessToken
-            }
-        }).then((response) => response.json()
-            .then(data => {
-                if (!data.error) {
-                    data.items.forEach(playlist => {
-                        if (playlist.name === "Discover Weekly") {
+            url = new URL('https://api.spotify.com/v1/me/playlists');
+            url.search = new URLSearchParams({ limit: 50 });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken
+                }
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        data.items.forEach(playlist => {
+                            if (playlist.name === "Discover Weekly") {
 
-                            url = new URL('https://api.spotify.com/v1/playlists/' + playlist.id + '/tracks');
-                            url.search = new URLSearchParams({ limit: 50 });
-                            fetch(url.toString(), {
-                                headers: {
-                                    "Authorization": "Bearer " + this.props.accessToken
-                                }
-                            }).then((response) => response.json()
-                                .then(data => {
-                                    if (!data.error) {
-                                        this.setState({ discoverWeekly: data.items.map(track => track.track) })
+                                url = new URL('https://api.spotify.com/v1/playlists/' + playlist.id + '/tracks');
+                                url.search = new URLSearchParams({ limit: 50 });
+                                fetch(url.toString(), {
+                                    headers: {
+                                        "Authorization": "Bearer " + this.props.accessToken
                                     }
-                                }))
-                        }
-                    })
-                }
-            }))
+                                }).then((response) => response.json()
+                                    .then(data => {
+                                        if (!data.error) {
+                                            this.setState({ discoverWeekly: data.items.map(track => track.track) })
+                                        }
+                                    }))
+                            }
+                        })
+                    }
+                }))
 
-        url = new URL('https://api.spotify.com/v1/me/player/recently-played');
-        url.search = new URLSearchParams({ limit: 50 });
-        fetch(url.toString(), {
-            headers: {
-                "Authorization": "Bearer " + this.props.accessToken
-            }
-        }).then((response) => response.json()
-            .then(data => {
-                if (!data.error) {
-                    this.setState({ recentTracks: data.items.map(track => track.track) })
+            url = new URL('https://api.spotify.com/v1/me/player/recently-played');
+            url.search = new URLSearchParams({ limit: 50 });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken
                 }
-            }))
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        this.setState({ recentTracks: data.items.map(track => track.track) })
+                    }
+                }))
 
-        url = new URL('https://api.spotify.com/v1/recommendations/available-genre-seeds');
-        fetch(url.toString(), {
-            headers: {
-                "Authorization": "Bearer " + this.props.accessToken
-            }
-        }).then((response) => response.json()
-            .then(data => {
-                if (!data.error) {
-                    this.setState({ genreSeeds: data.genres });
+            url = new URL('https://api.spotify.com/v1/recommendations/available-genre-seeds');
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken
                 }
-            }))
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        this.setState({ genreSeeds: data.genres });
+                    }
+                }))
+        }, 1000)
     }
 
     minsToMs = (mins) => {
@@ -331,7 +337,7 @@ class FindSongWithAccount extends Component {
                             this.state.candidates.forEach(candidate => {
                                 if (candidate.id === bestMatch.id) {
                                     console.log(candidate)
-                                    this.setState({ song: candidate })
+                                    this.setState({ song: candidate }, () => this.scrollTo("result"))
                                 }
                             })
                         }
@@ -366,27 +372,94 @@ class FindSongWithAccount extends Component {
             <ScrollLock>
                 <div >
                     <Element name="time">
-                        <FullHeight className="preferences--time">
-                            <Button onClick={() => this.scrollTo("song")}>Next</Button>
+                        <FullHeight className="preferences preferences--time">
+                            <Container className="central-content time-container">
+                                <Row>
+                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                        <div className="preferences__question preferences__question--time">
+                                            How many minutes would you like to spend in the shower?
+                                        </div>
+                                        <Preferences
+                                            preferences={this.state.preferences}
+                                            setPreferences={preferences => this.setState({ preferences })}
+                                            showTime={true}
+                                            showFamiliarity={false}
+                                            showGenres={false}
+                                            showOptions={false}
+                                        />
+                                    </Col>
+                                </Row>
+                            </Container>
+                            <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>
                         </FullHeight>
                     </Element>
-                    <Element name="song">
-                        <FullHeight className="preferences--song">
-                            <Button onClick={() => this.scrollTo("time")}>Prev</Button>
-                            <Button onClick={() => this.scrollTo("searching")}>Next</Button>
-                        </FullHeight>
-                    </Element>
-                    <Element name="searching">
-                        <FullHeight className="searching">
-                            <Button onClick={() => this.scrollTo("song")}>Prev</Button>
-                            <Button onClick={() => this.scrollTo("result")}>Next</Button>
-                        </FullHeight>
-                    </Element>
-                    <Element name="result">
-                        <FullHeight className="song-result">
-                            <Button onClick={() => this.scrollTo("searching")}>Prev</Button>
-                        </FullHeight>
-                    </Element>
+                    {this.state.timeSubmitted ?
+                        <Element name="options">
+                            <FullHeight className="preferences preferences--options">
+                                <button className="preferences__back-button" onClick={() => this.scrollTo("time")}><IoIosArrowUp /></button>
+                                <Container className="central-content">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <div className="preferences__question preferences__question--options">
+                                                What type of song are you in the mood for?
+                                        </div>
+                                            <Preferences
+                                                preferences={this.state.preferences}
+                                                setPreferences={preferences => this.setState({ preferences })}
+                                                showTime={false}
+                                                showFamiliarity={true}
+                                                showGenres={false}
+                                                showOptions={true}
+                                            />
+                                        </Col>
+                                    </Row>
+                                </Container>
+                                <button className="preferences__continue-button"
+                                    onClick={() => {
+                                        this.submitPreferences();
+                                    }}
+                                >Find your perfect song</button>
+                            </FullHeight>
+                        </Element>
+                        : null}
+                    {this.state.submitted ?
+                        <Element name="searching">
+                            <FullHeight className="searching">
+                                <Container className="central-content">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <div>
+                                                <img src={Animation} width={"50%"} alt="loading animation " />
+                                                <div>
+                                                    Finding Your Perfect Shower Song...
+                                            </div>
+                                            </div>
+                                        </Col>
+                                    </Row>
+                                </Container>
+                            </FullHeight>
+                        </Element>
+                        : null}
+                    {this.state.song ?
+                        <Element name="result">
+                            <FullHeight className="song-result result-page__background" >
+                                <Container className="central-content">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <Song
+                                                song={this.state.song}
+                                                preferences={this.state.preferences}
+                                                nothingKnown={this.state.nothingKnown}
+                                                showSpotify={true}
+                                                showYouTube={false}
+                                                accessToken={this.props.accessToken}
+                                            />
+                                        </Col>
+                                    </Row>
+                                </Container>
+                            </FullHeight>
+                        </Element>
+                        : null}
                 </div>
             </ScrollLock>
 

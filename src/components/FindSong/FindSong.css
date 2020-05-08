@@ -11,38 +11,171 @@ padding-right: 10px;
     display: none;
 }
 
-.rc-slider-step {
+.time-slider > .rc-slider > .rc-slider-step {
     background: rgb(3,116,0);
-    background: linear-gradient(90deg, rgba(3,116,0,1) 0%, rgba(212,255,211,1) 100%);
-    height: 8px;
-    border-radius: 4px
+    background: linear-gradient(90deg, #29c59e 0%, #29c59e 25%, #4da0ce 100%);
+    height: 12px;
+    border: 2px solid white;
+    border-radius: 8px
+}
 
+.rc-slider-step {
+    background: #29c59e;
+    height: 12px;
+    border: 2px solid white;
+    border-radius: 8px
+}
+
+.rc-slider-mark-text{
+    color: white;
+    padding-top: 10px
 }
 
 .rc-slider-rail {
-    display: none;
+    display: none !important;
+}
+
+.rc-slider-track{ 
+    display: none !important;
 }
 
 .rc-slider-handle {
-    height: 16px;
-    width: 16px;
-    background: #007aff;
+    height: 21px;
+    width: 21px;
+    background: #d4fff5;
+    border: 2px solid white;
+}
+
+
+.central-content{
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.preferences__question {
+    font-size: 1.3em;
+    text-align: left;
+    padding-bottom: 20px;
+}
+
+.preferences__continue-button {
+    position: absolute;
+    left: 50%;
+    width: 100%;
+    margin-left: -125px;
+    bottom: 5%;
+    background-color: transparent;
+    max-width: 250px;
+    padding: 10px;
     border: none;
+    border-radius: 100px;
+    box-shadow: 0 4px 12px -6px black;
 }
 
-.preferences--time{
-    background-color: pink;
+.preferences{
+    position: relative;
+    padding: 10px
 }
 
-.preferences--song{
-    background-color: green;
+.time-container{
+    min-height: 150px
 }
 
-.searching{
-    background-color: blue;
+.preferences__back-button {
+    position: absolute;
+    left: 50%;
+    width: 100%;
+    margin-left: -25px;
+    top: 0%;
+    background-color: transparent;
+    max-width: 50px;
+    padding: 10px;
+    border: none;
+    border-radius: 100px;
+    font-size: 1.4em;
 }
 
-.song-result{
-    background-color: orange;
+.preferences__slider-label {
+    font-size: 0.8em;
+    height: 50px;
+}
+.preferences__slider-label--left {
+    float: left;
+}
+
+.preferences__slider-label--right {
+    float: right;
+}
+
+.preferences__slider{
+    height: 60px;  
+}
+
+.rc-slider {
+    padding-top: 25px;
+}
+
+
+.time-slider > .rc-slider {
+    padding-top: 0px;
+}
+
+.radio-option {
+    font-size: 0.8em !important;
+    margin-bottom: 20px;
+    background-color: transparent !important;
+    border: 2px solid white !important;
+    border-radius: 100px;
+    width: 50% !important;
+}
+
+.radio-option--active {
+    font-size: 0.8em !important;
+    margin-bottom: 20px;
+    background-color: #29c59e !important;
+}
+
+.radio-options {
+   width: 100%;
+}
+
+.song__message {
+   text-align: left;
+   font-size: 1.3em;
+}
+
+.song__image {
+    width: 80%;
+    margin: 5% 10%;
+    box-shadow: 0 4px 12px -6px black;
+}
+
+.song__name {
+    font-size: 1.5em;
+}
+
+.song__artist {
+    font-size: 1.2em;
+}
+
+.song__listen-button {
+    border-radius: 100px;
+    width: 100%;
+    max-width: 250px;
+    border: none;
+    margin-top: 10px;
+    font-size: 1em;
+    padding: 10px;
+    box-shadow: 0 4px 12px -6px black;
+}
+
+.song__listen-button--spotify {
+    background-color: #1eb953;
+    margin-top: 20px;
+}
+
+.song__listen-button--youtube {
+    background-color: #f70302;
 }
 

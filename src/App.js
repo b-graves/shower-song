@@ -12,6 +12,8 @@ import FullHeight from "react-full-height";
 
 import Logo from "./assets/logo.svg"
 
+import {FaSpotify} from "react-icons/fa"
+
 class App extends Component {
 
   state = {
@@ -72,7 +74,7 @@ onClickContinue = () => {
             : <FindSongWithoutAccount accessToken={this.state.accessToken} />
           :
           <FullHeight className="start-page__background">
-            <Container>
+            <Container className="bottom-content">
               <Row>
                 <Col sm="12" md={{ size: 6, offset: 3 }}>
                   <img className="start-page__logo" src={Logo} alt="Shower Song Logo" />
@@ -81,13 +83,13 @@ onClickContinue = () => {
                     “On average an eight minute shower uses around 65 litres of water, which is over three times the amount many people in the developing world rely on for a whole day”
                 </div>
                   <div className="start-page__reference">
-                    -Tim Wainwright, Water Aid
+                    -Tim Wainwright, WaterAid
                 </div>
                   <div className="start-page__tagline">
                     Find your perfect song for a shorter shower
                 </div>
                   <button onClick={() => this.onClickConnect()} className="start-page__connect-button">
-                    Connect to Spotify
+                    <FaSpotify className="button-icon" /> Connect to Spotify
                 </button>
                   <div className="start-page__or">
                     or

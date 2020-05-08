@@ -38,7 +38,11 @@
 }
 
 .start-page__background { 
-  background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(0deg, rgba(0,0,0,1) 0%,  rgba(0,68,89,0.5) 50%, rgba(255,255,255,0) 100%);
+}
+
+.result-page__background { 
+  background: linear-gradient(0deg, rgba(255,255,255,1) 0%,rgba(77, 176, 202,0.5) 30%, rgba(255,255,255,0) 100%);
 }
 
 .start-page__logo {
@@ -70,10 +74,12 @@
   padding: 10px;
   max-width: 250px;
   margin: 0 auto;
+  margin-top: 20px;
   max-height: 44px;
   border-radius: 22px;
   width: 100%;
   border: none;
+  box-shadow: 0 4px 12px -6px black;
 }
 
 .start-page__continue-without-button {
@@ -82,15 +88,17 @@
   padding: 10px;
   max-width: 250px;
   margin: 0 auto;
+  margin-bottom: 10px;
   height: 44px;
   border-radius: 22px;
   width: 100%;
   border: none;
+  font-size: 0.9em;
 }
 
 .start-page__or {
   font-size: 0.8em;
-  padding-top: 15px;
+  padding-top: 10px;
 }
 
 @media (max-width: 199px) {
@@ -113,8 +121,22 @@
   *{ font-size: 100%; }
 }
 
+.bottom-content{
+  position: relative;
+top: 75%;
+transform: translateY(-75%);
+}
 
+.song__enjoy {
+  font-size: 1.3em;
+  color: #4da1cf;
+  margin-top: 40px;
+}
 
+.button-icon {
+  margin-right: 4px;
+  margin-bottom: 2px;
+}
 
 
 
