@@ -369,99 +369,102 @@ class FindSongWithAccount extends Component {
 
     render() {
         return (
-            <ScrollLock>
-                <div >
-                    <Element name="time">
-                        <FullHeight className="preferences preferences--time">
-                            <Container className="central-content time-container">
-                                <Row>
-                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                        <div className="preferences__question preferences__question--time">
-                                            How many minutes would you like to spend in the shower?
-                                        </div>
-                                        <Preferences
-                                            preferences={this.state.preferences}
-                                            setPreferences={preferences => this.setState({ preferences })}
-                                            showTime={true}
-                                            showFamiliarity={false}
-                                            showGenres={false}
-                                            showOptions={false}
-                                        />
-                                    </Col>
-                                </Row>
-                            </Container>
-                            <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>
-                        </FullHeight>
-                    </Element>
-                    {this.state.timeSubmitted ?
-                        <Element name="options">
-                            <FullHeight className="preferences preferences--options">
-                                <button className="preferences__back-button" onClick={() => this.scrollTo("time")}><IoIosArrowUp /></button>
-                                <Container className="central-content">
+            <div >
+                <Element name="time">
+                    <FullHeight className="preferences--time">
+                        <ScrollLock>
+                            <div className="preferences">
+                                <Container className="central-content time-container">
                                     <Row>
                                         <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                            <div className="preferences__question preferences__question--options">
-                                                What type of song are you in the mood for?
+                                            <div className="preferences__question preferences__question--time">
+                                                How many minutes would you like to spend in the shower?
                                         </div>
                                             <Preferences
                                                 preferences={this.state.preferences}
                                                 setPreferences={preferences => this.setState({ preferences })}
-                                                showTime={false}
-                                                showFamiliarity={true}
+                                                showTime={true}
+                                                showFamiliarity={false}
                                                 showGenres={false}
-                                                showOptions={true}
+                                                showOptions={false}
                                             />
                                         </Col>
                                     </Row>
                                 </Container>
-                                <button className="preferences__continue-button"
-                                    onClick={() => {
-                                        this.submitPreferences();
-                                    }}
-                                >Find your perfect song</button>
-                            </FullHeight>
-                        </Element>
-                        : null}
-                    {this.state.submitted ?
-                        <Element name="searching">
-                            <FullHeight className="searching">
-                                <Container className="central-content">
-                                    <Row>
-                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>
+                            </div>
+                        </ScrollLock>
+                    </FullHeight>
+
+                </Element>
+                {this.state.timeSubmitted ?
+                    <Element name="options">
+                        <FullHeight className="preferences preferences--options">
+                            <button className="preferences__back-button" onClick={() => this.scrollTo("time")}><IoIosArrowUp /></button>
+                            <Container className="central-content">
+                                <Row>
+                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                        <div className="preferences__question preferences__question--options">
+                                            What type of song are you in the mood for?
+                                        </div>
+                                        <Preferences
+                                            preferences={this.state.preferences}
+                                            setPreferences={preferences => this.setState({ preferences })}
+                                            showTime={false}
+                                            showFamiliarity={true}
+                                            showGenres={false}
+                                            showOptions={true}
+                                        />
+                                    </Col>
+                                </Row>
+                            </Container>
+                            <button className="preferences__continue-button"
+                                onClick={() => {
+                                    this.submitPreferences();
+                                }}
+                            >Find your perfect song</button>
+                        </FullHeight>
+                    </Element>
+                    : null}
+                {this.state.submitted ?
+                    <Element name="searching">
+                        <FullHeight className="searching">
+                            <Container className="central-content">
+                                <Row>
+                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                        <div>
+                                            <img src={Animation} width={"50%"} alt="loading animation " />
                                             <div>
-                                                <img src={Animation} width={"50%"} alt="loading animation " />
-                                                <div>
-                                                    Finding Your Perfect Shower Song...
+                                                Finding Your Perfect Shower Song...
                                             </div>
-                                            </div>
-                                        </Col>
-                                    </Row>
-                                </Container>
-                            </FullHeight>
-                        </Element>
-                        : null}
-                    {this.state.song ?
-                        <Element name="result">
-                            <FullHeight className="song-result result-page__background" >
-                                <Container className="central-content">
-                                    <Row>
-                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                            <Song
-                                                song={this.state.song}
-                                                preferences={this.state.preferences}
-                                                nothingKnown={this.state.nothingKnown}
-                                                showSpotify={true}
-                                                showYouTube={false}
-                                                accessToken={this.props.accessToken}
-                                            />
-                                        </Col>
-                                    </Row>
-                                </Container>
-                            </FullHeight>
-                        </Element>
-                        : null}
-                </div>
-            </ScrollLock>
+                                        </div>
+                                    </Col>
+                                </Row>
+                            </Container>
+                        </FullHeight>
+                    </Element>
+                    : null}
+                {this.state.song ?
+                    <Element name="result">
+                        <FullHeight className="song-result result-page__background" >
+                            <Container className="central-content">
+                                <Row>
+                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                        <Song
+                                            song={this.state.song}
+                                            preferences={this.state.preferences}
+                                            nothingKnown={this.state.nothingKnown}
+                                            showSpotify={true}
+                                            showYouTube={false}
+                                            accessToken={this.props.accessToken}
+                                        />
+                                    </Col>
+                                </Row>
+                            </Container>
+                        </FullHeight>
+                    </Element>
+                    : null}
+            </div>
 
         )
     }
