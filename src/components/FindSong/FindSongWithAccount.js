@@ -99,7 +99,7 @@ class FindSongWithAccount extends Component {
                 .then(data => {
                     if (!data.error) {
                         this.setState({ topArtists: data })
-                        data.items.forEach(artist => {
+                        this.shuffle(data.items).slice(0, 5).forEach(artist => {
                             let url = new URL('https://api.spotify.com/v1/artists/' + artist.id + '/top-tracks');
                             url.search = new URLSearchParams({ country: "from_token" });
                             fetch(url.toString(), {
@@ -110,7 +110,7 @@ class FindSongWithAccount extends Component {
                             }).then((response) => response.json()
                                 .then(data => {
                                     if (!data.error) {
-                                        this.setState({ topTracks: { ...this.state.topTracks, items: this.state.topTracks.items.concat(data.tracks) } });
+                                        this.setState({ topTracks: { ...this.state.topTracks, items: this.state.topTracks.items.concat(data.tracks.slice(0,5)) } });
                                     }
                                 })
                             )
@@ -230,7 +230,7 @@ class FindSongWithAccount extends Component {
             }).then((response) => response.json()
                 .then(data => {
                     if (!data.error) {
-                        this.setState({ recentTracks: data.items.map(track => track.track) })
+                        this.setState({ recentTracks: data.items.map(track => track.track).slice(0,20) })
                     } else {
                         this.setState({ recentTracks: [] })
                     }
