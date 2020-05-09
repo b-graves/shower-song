@@ -510,6 +510,10 @@ class FindSongWithAccount extends Component {
         setTimeout(() => callback(), 750)
     }
 
+    goHome = () => {
+        document.location.href="/";
+    }
+
     render() {
         return (
             this.state.criticalError ?
@@ -532,8 +536,8 @@ class FindSongWithAccount extends Component {
                                 <Container className="central-content time-container">
                                     <Row>
                                         <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                            <img className="welcome-page__logo" src={Logo} alt="Shower Song Logo" />
-                                            <div className="start-page__title">Shower Song</div>
+                                            <img onClick={() => this.goHome()} className="welcome-page__logo" src={Logo} alt="Shower Song Logo" />
+                                            <div onClick={() => this.goHome()} className="start-page__title">Shower Song</div>
                                             <div className="welcome-page__message">
                                                 Welcome {this.props.data.user.display_name.split(" ")[0]}!
                                     </div>
@@ -608,8 +612,8 @@ class FindSongWithAccount extends Component {
                                 <Container>
                                     <Row>
                                         <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                            <img className="recap-page__logo" src={Logo} alt="Shower Song Logo" />
-                                            <div className="recap-page__title">Shower Song</div>
+                                            <img onClick={() => this.goHome()} className="recap-page__logo" src={Logo} alt="Shower Song Logo" />
+                                            <div onClick={() => this.goHome()} className="recap-page__title">Shower Song</div>
                                             <div className="recap__time">
                                                 <div className="preferences__question preferences__question--time">
                                                     How many minutes would you like to spend in the shower?
