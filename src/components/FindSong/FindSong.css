@@ -246,13 +246,13 @@ padding-right: 10px;
 .genre-grid {
     width: 100% !important;
     margin-bottom: 20px;
+    border-radius: 8px !important;
 }
 
 .genre-button {
     font-size: 0.8em !important;
     background-color: transparent !important;
     border: 2px solid white !important;
-    border-radius: 100px;
     width: 25% !important;
 }
 
