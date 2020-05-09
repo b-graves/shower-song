@@ -148,7 +148,8 @@ class Song extends Component {
                         <button
                             className={"song__listen-button song__listen-button--spotify"}
                             onClick={() => {
-                                var win = window.open(this.props.song.uri+"?highlight="+this.props.song.uri, '_blank');
+                                var win = window.open("https://open.spotify.com/go?uri="+this.props.song.uri+"?play=true")
+                                // var win = window.open(this.props.song.uri+"?highlight="+this.props.song.uri, '_blank');
                                 win.focus();
                                 // this.setState({deviceFound: false, playing: false}, () => this.findDevice())
                             }} ><FaSpotify className="button-icon" /> Listen on Spotify...</button>
