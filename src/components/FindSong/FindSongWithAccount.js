@@ -86,26 +86,23 @@ class FindSongWithAccount extends Component {
             fetch(url.toString(), {
                 headers: {
                     "Authorization": "Bearer " + this.props.accessToken,
-
                 }
             }).then((response) => response.json()
                 .then(data => {
                     if (!data.error) {
                         this.setState({ topArtists: data })
                         data.items.forEach(artist => {
-                            let url = new URL('https://api.spotify.com/v1/artists/'+artist.id+'/top-tracks');
+                            let url = new URL('https://api.spotify.com/v1/artists/' + artist.id + '/top-tracks');
                             url.search = new URLSearchParams({ country: "from_token" });
                             fetch(url.toString(), {
                                 headers: {
                                     "Authorization": "Bearer " + this.props.accessToken,
-                        
+
                                 }
                             }).then((response) => response.json()
                                 .then(data => {
                                     if (!data.error) {
-                                        console.log(artist.name)
-                                        console.log(data.tracks)
-                                        this.setState({ topTracks: {...this.state.topTracks, items: this.state.topTracks.items.concat(data.tracks) }});
+                                        this.setState({ topTracks: { ...this.state.topTracks, items: this.state.topTracks.items.concat(data.tracks) } });
                                     } else {
                                         this.setState({ topArtists: { items: [] } })
                                     }
@@ -115,7 +112,6 @@ class FindSongWithAccount extends Component {
                     }
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.setState({ criticalError: true, errorMessage: "Could not load top artists" })
                 })
             )
@@ -129,13 +125,12 @@ class FindSongWithAccount extends Component {
             }).then((response) => response.json()
                 .then(data => {
                     if (!data.error) {
-                        this.setState({ topTracks: {...this.state.topTracks, items: this.state.topTracks.items.concat(data.items) } })
+                        this.setState({ topTracks: { ...this.state.topTracks, items: this.state.topTracks.items.concat(data.items) } })
                     } else {
                         this.setState({ topTracks: { items: [] } })
                     }
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.setState({ criticalError: true, errorMessage: "Could not load top tracks" })
                 })
             )
@@ -156,7 +151,6 @@ class FindSongWithAccount extends Component {
                     }
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.setState({ criticalError: true, errorMessage: "Could not load top albums" })
                 })
             )
@@ -176,7 +170,6 @@ class FindSongWithAccount extends Component {
                     }
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.setState({ criticalError: true, errorMessage: "Could not load users tracks" })
                 })
             )
@@ -213,7 +206,6 @@ class FindSongWithAccount extends Component {
                     }
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.setState({ criticalError: true, errorMessage: "Could not load discover weekly" })
                 })
             )
@@ -236,7 +228,6 @@ class FindSongWithAccount extends Component {
                     }
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.setState({ criticalError: true, errorMessage: "Could not load recently played" })
                 })
             )
@@ -255,7 +246,6 @@ class FindSongWithAccount extends Component {
                     }
                 })
                 .catch((error) => {
-                    console.log(error)
                     this.setState({ criticalError: true, errorMessage: "Could not load genres" })
                 })
             )
@@ -283,22 +273,24 @@ class FindSongWithAccount extends Component {
     }
 
     getReccommendations = (type, values) => {
-        if (type === "tracks") {
-            console.log(values)
-        }
         let url = new URL('https://api.spotify.com/v1/recommendations');
-        values = this.shuffle(values.filter(value => value !== undefined && value !== null)).slice(0, 50)
+        values = this.shuffle(values.filter(value => value !== undefined && value !== null))
         for (let i = 0; i < values.length; i += 5) {
             url.search = new URLSearchParams({
-                limit: 100,
+                limit: 10,
                 ["seed_" + type]: values.slice(i, i + 5).map(value => type === "genres" ? value : value.id).join(","),
                 min_duration_ms: this.minsToMs(this.state.preferences.duration - 0.25),
                 max_duration_ms: this.minsToMs(this.state.preferences.duration + 0.25),
-
-                target_acousticness: this.state.preferences.acousticness / 100,
+                target_accouticness: this.state.preferences.acousticness / 100,
+                min_acousticness: (this.state.preferences.acousticness / 100)-0.4,
+                max_acousticness: (this.state.preferences.acousticness / 100)+0.4,
                 target_danceability: this.state.preferences.energy / 100,
                 target_energy: this.state.preferences.energy / 100,
+                min_energy: (this.state.preferences.energy / 100)-0.4,
+                max_energy: (this.state.preferences.energy / 100)+0.4,
                 target_instrumentalness: this.state.preferences.instrumentalness / 100,
+                min_instrumentalness: (this.state.preferences.instrumentalness / 100)-0.4,
+                max_instrumentalness: (this.state.preferences.instrumentalness / 100)+0.4,
                 // target_popularity: this.state.preferences.popularity,
                 target_valence: this.state.preferences.energy / 100,
             });
@@ -343,13 +335,14 @@ class FindSongWithAccount extends Component {
             const genresSorted = Object.keys(topGenres).sort(function (a, b) { return topGenres[b] - topGenres[a] })
 
             this.setState({ gettingReccomendations: true, generating: true, candidates: this.state.discoverWeekly }, () => {
-                console.log(this.state.discoverWeekly)
-                this.getReccommendations("tracks", this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks).concat(this.state.discoverWeekly))
-                this.getReccommendations("artists", this.state.topArtists.items.concat(this.state.secondaryArtists))
-                if (genresSorted.length > 0) {
-                    this.getReccommendations("genres", genresSorted)
-                }
-                this.setState({ gettingReccomendations: false })
+                setTimeout(() => {
+                    this.getReccommendations("tracks", this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks).concat(this.state.discoverWeekly))
+                    this.getReccommendations("artists", this.state.topArtists.items.concat(this.state.secondaryArtists))
+                    if (genresSorted.length > 0) {
+                        this.getReccommendations("genres", genresSorted)
+                    }
+                    this.setState({ gettingReccomendations: false })
+                }, 1500)
             });
         } else {
             this.setState({ generating: true, candidates: this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks) })
@@ -385,7 +378,6 @@ class FindSongWithAccount extends Component {
 
             this.setState({ candidates: topTracks.map(track => track.track), candidatesFiltered: true })
         } else {
-            console.log(this.state.candidates)
             this.setState({ candidatesFiltered: true, candidates: candidates.filter(candidate => candidate.duration_ms >= this.minsToMs(this.state.preferences.duration - 0.25) && candidate.duration_ms <= this.minsToMs(this.state.preferences.duration + 0.25)) })
         }
     }
@@ -439,10 +431,7 @@ class FindSongWithAccount extends Component {
                             );
                             audioFeatures.sort(function (a, b) { return a.mse - b.mse })
                             let bestMatch = audioFeatures[0]
-                            console.log(audioFeatures)
-                            console.log(bestMatch)
                             audioFeatures = audioFeatures.filter(a => a.mse <= bestMatch.mse + 0.1)
-                            console.log(audioFeatures)
                             bestMatch = this.randomItem(audioFeatures);
                             console.log(bestMatch)
                             this.state.candidates.forEach(candidate => {
@@ -499,7 +488,6 @@ class FindSongWithAccount extends Component {
     }
 
     render() {
-
         return (
             this.state.criticalError ?
                 <FullHeight className="preferences">
@@ -548,7 +536,7 @@ class FindSongWithAccount extends Component {
                                         </div>
                                         <Preferences
                                             preferences={this.state.preferences}
-                                            setPreferences={preferences => this.setState({ preferences })}
+                                            setPreferences={preferences => {console.log(preferences); this.setState({ preferences })}}
                                             showTime={true}
                                             showFamiliarity={false}
                                             showGenres={false}

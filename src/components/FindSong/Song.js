@@ -46,7 +46,6 @@ class Song extends Component {
     }
 
     render() {
-        console.log(this.props.song)
         return (
             <div>
                 <div className="song__message">
