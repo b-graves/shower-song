@@ -452,8 +452,8 @@ class FindSongWithAccount extends Component {
                             let audioFeatures = data.audio_features.map(features => {
                                 return {
                                     ...features, mse: this.mse(
-                                        [features.energy, features.danceability, features.valence, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness, features.acousticness, features.acousticness],
-                                        [this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100, this.state.preferences.acousticness / 100, this.state.preferences.acousticness / 100]
+                                        [features.energy, features.instrumentalness, features.acousticness],
+                                        [this.state.preferences.energy / 100,  this.state.preferences.instrumentalness / 100,  this.state.preferences.acousticness / 100]
                                     )
                                 }
                             }
