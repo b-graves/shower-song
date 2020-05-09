@@ -6,7 +6,7 @@ import Slider from 'rc-slider';
 
 import "./FindSong.css";
 
-import {FaSpotify, FaYoutube} from "react-icons/fa"
+import { FaSpotify, FaYoutube } from "react-icons/fa"
 
 class Song extends Component {
 
@@ -73,8 +73,13 @@ class Song extends Component {
                         <button
                             className={"song__listen-button song__listen-button--youtube"}
                             onClick={() => {
-                                var win = window.open("https://www.youtube.com/results?search_query=" + this.props.song.external_ids.isrc, '_blank');
-                                win.focus();
+                                if (this.props.youtubeResults) {
+                                    var win = window.open("https://www.youtube.com/results?search_query=" + this.props.song.external_ids.isrc, '_blank');
+                                    win.focus();
+                                } else {
+                                    var win = window.open("https://www.youtube.com/results?search_query=" + this.props.song.artists[0].name + " - " + this.props.song.name, '_blank');
+                                    win.focus();
+                                }
                             }}><FaYoutube className="button-icon" /> Listen on YouTube</button>
                     </div>
                     {false ? <iframe title={"track"} src={"https://open.spotify.com/embed/track/" + this.props.song.id} width={"100%"} height={"500px"} frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe> : null}

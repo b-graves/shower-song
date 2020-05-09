@@ -28,7 +28,9 @@ class FindSongWithAccount extends Component {
         welcomeScroll: true,
         song: null,
         topArtists: null,
-        topTracks: null,
+        topTracks: {
+            items: []
+        },
         secondaryArtists: null,
         secondaryTracks: null,
         recentTracks: null,
@@ -43,6 +45,7 @@ class FindSongWithAccount extends Component {
         submitted: false,
         timeSubmitted: false,
         recap: false,
+        youtubeResults: true,
         preferences: {
             familiar: false,
             energy: 50,
@@ -62,7 +65,9 @@ class FindSongWithAccount extends Component {
             candidates: [],
             song: null,
             topArtists: null,
-            topTracks: null,
+            topTracks: {
+                items: []
+            },
             secondaryArtists: null,
             secondaryTracks: null,
             recentTracks: null,
@@ -87,8 +92,26 @@ class FindSongWithAccount extends Component {
                 .then(data => {
                     if (!data.error) {
                         this.setState({ topArtists: data })
-                    } else {
-                        this.setState({ topArtists: { items: [] } })
+                        data.items.forEach(artist => {
+                            let url = new URL('https://api.spotify.com/v1/artists/'+artist.id+'/top-tracks');
+                            url.search = new URLSearchParams({ country: "from_token" });
+                            fetch(url.toString(), {
+                                headers: {
+                                    "Authorization": "Bearer " + this.props.accessToken,
+                        
+                                }
+                            }).then((response) => response.json()
+                                .then(data => {
+                                    if (!data.error) {
+                                        console.log(artist.name)
+                                        console.log(data.tracks)
+                                        this.setState({ topTracks: {...this.state.topTracks, items: this.state.topTracks.items.concat(data.tracks) }});
+                                    } else {
+                                        this.setState({ topArtists: { items: [] } })
+                                    }
+                                })
+                            )
+                        })
                     }
                 })
                 .catch((error) => {
@@ -106,7 +129,7 @@ class FindSongWithAccount extends Component {
             }).then((response) => response.json()
                 .then(data => {
                     if (!data.error) {
-                        this.setState({ topTracks: data })
+                        this.setState({ topTracks: {...this.state.topTracks, items: this.state.topTracks.items.concat(data.items) } })
                     } else {
                         this.setState({ topTracks: { items: [] } })
                     }
@@ -264,10 +287,10 @@ class FindSongWithAccount extends Component {
             console.log(values)
         }
         let url = new URL('https://api.spotify.com/v1/recommendations');
-        values = this.shuffle(values.filter(value => value !== undefined && value !== null))
+        values = this.shuffle(values.filter(value => value !== undefined && value !== null)).slice(0, 50)
         for (let i = 0; i < values.length; i += 5) {
             url.search = new URLSearchParams({
-                limit: 20,
+                limit: 100,
                 ["seed_" + type]: values.slice(i, i + 5).map(value => type === "genres" ? value : value.id).join(","),
                 min_duration_ms: this.minsToMs(this.state.preferences.duration - 0.25),
                 max_duration_ms: this.minsToMs(this.state.preferences.duration + 0.25),
@@ -334,9 +357,10 @@ class FindSongWithAccount extends Component {
     }
 
     filterCandidates = () => {
+        let candidates = this.state.candidates.filter(value => value !== undefined && value !== null)
         if (!this.state.preferences.familiar || this.state.nothingKnown) {
             const topArtistIds = this.state.topArtists.items.map(artist => artist.id);
-            let candidates = this.state.candidates.filter(candidate => !topArtistIds.includes(candidate.artists[0].id));
+            candidates = candidates.filter(candidate => !topArtistIds.includes(candidate.artists[0].id));
 
             let topTracks = {};
 
@@ -362,7 +386,7 @@ class FindSongWithAccount extends Component {
             this.setState({ candidates: topTracks.map(track => track.track), candidatesFiltered: true })
         } else {
             console.log(this.state.candidates)
-            this.setState({ candidatesFiltered: true, candidates: this.state.candidates.filter(candidate => candidate.duration_ms >= this.minsToMs(this.state.preferences.duration - 0.25) && candidate.duration_ms <= this.minsToMs(this.state.preferences.duration + 0.25)) })
+            this.setState({ candidatesFiltered: true, candidates: candidates.filter(candidate => candidate.duration_ms >= this.minsToMs(this.state.preferences.duration - 0.25) && candidate.duration_ms <= this.minsToMs(this.state.preferences.duration + 0.25)) })
         }
     }
 
@@ -372,6 +396,18 @@ class FindSongWithAccount extends Component {
             error += Math.pow((b[i] - a[i]), 2)
         }
         return error / a.length
+    }
+
+
+    checkYt = (song) => {
+        const Http = new XMLHttpRequest();
+        const url = "https://cors-anywhere.herokuapp.com/https://www.youtube.com/results?search_query=" + song.external_ids.isrc;
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            this.setState({ youtubeResults: !Http.responseText.includes("No results found") })
+        }
     }
 
     getFeatures = () => {
@@ -395,18 +431,23 @@ class FindSongWithAccount extends Component {
                             let audioFeatures = data.audio_features.map(features => {
                                 return {
                                     ...features, mse: this.mse(
-                                        [features.energy, features.danceability, features.valence, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness],
-                                        [this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100]
+                                        [features.energy, features.danceability, features.valence, features.instrumentalness, features.instrumentalness, features.instrumentalness, features.acousticness, features.acousticness, features.acousticness],
+                                        [this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.energy / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.instrumentalness / 100, this.state.preferences.acousticness / 100, this.state.preferences.acousticness / 100, this.state.preferences.acousticness / 100]
                                     )
                                 }
                             }
                             );
                             audioFeatures.sort(function (a, b) { return a.mse - b.mse })
-                            // let bestMatch = audioFeatures[0]
+                            let bestMatch = audioFeatures[0]
                             console.log(audioFeatures)
-                            let bestMatch = this.randomItem(audioFeatures.slice(0, 5));
+                            console.log(bestMatch)
+                            audioFeatures = audioFeatures.filter(a => a.mse <= bestMatch.mse + 0.1)
+                            console.log(audioFeatures)
+                            bestMatch = this.randomItem(audioFeatures);
+                            console.log(bestMatch)
                             this.state.candidates.forEach(candidate => {
                                 if (candidate.id === bestMatch.id) {
+                                    this.checkYt(candidate)
                                     this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
                                 }
                             })
@@ -620,6 +661,7 @@ class FindSongWithAccount extends Component {
                                                 showSpotify={true}
                                                 showYouTube={false}
                                                 accessToken={this.props.accessToken}
+                                                youtubeResults={this.state.youtubeResults}
                                             />
                                         </Col>
                                     </Row>
