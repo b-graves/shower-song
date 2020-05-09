@@ -161,52 +161,7 @@ class Song extends Component {
                     })
                 })
             )
-
-            // let url = new URL('https://api.spotify.com/v1/me/player/devices');
-            // fetch(url.toString(), {
-            //     headers: {
-            //         "Authorization": "Bearer " + this.props.accessToken
-            //     }
-            // }).then((response) => response.json()
-            //     .then(data => {
-            //         let devices = data.devices;
-            //         let url = new URL('https://api.spotify.com/v1/me/player/queue');
-
-            //         url.search = new URLSearchParams({
-            //             uri: this.props.song.uri
-            //         });
-
-            //         fetch(url.toString(), {
-            //             headers: {
-            //                 "Authorization": "Bearer " + this.props.accessToken
-            //             },
-            //             method: 'POST'
-            //         }).then(data => {
-            //             let url = new URL('https://api.spotify.com/v1/me/player/next');
-            //             fetch(url.toString(), {
-            //                 headers: {
-            //                     "Authorization": "Bearer " + this.props.accessToken
-            //                 },
-            //                 method: 'POST'
-            //             }).then(data => {
-            //                 let chosenDevice = null;
-            //                 devices.forEach(device => {
-            //                     if (device.type === "Smartphone") {
-            //                         chosenDevice = device
-            //                     }
-            //                 });
-            //                 url = new URL('https://api.spotify.com/v1/me/player');
-            //                 fetch(url.toString(), {
-            //                     headers: {
-            //                         "Authorization": "Bearer " + this.props.accessToken
-            //                     },
-            //                     method: 'PUT',
-            //                     uris: [this.props.song.uri]
-            //                 })
-            //             })
-            //         });
-            //     }))
-        }, 2500);
+        }, 4000);
 
     }
 
