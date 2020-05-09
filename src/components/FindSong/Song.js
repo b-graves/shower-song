@@ -132,31 +132,81 @@ class Song extends Component {
     autoPlay = () => {
         setTimeout(() => {
             let url = new URL('https://api.spotify.com/v1/me/player/devices');
-                fetch(url.toString(), {
-                    headers: {
-                        "Authorization": "Bearer " + this.props.accessToken
-                    }
-                }).then((response) => response.json()
-                    .then(data => {
-                        let chosenDevice = null;
-                        data.devices.forEach(device => {
-                            if (device.type === "Smartphone") {
-                                chosenDevice = device
-                            }
-                        });
-                        url = new URL('https://api.spotify.com/v1/me/player/play');
-                        if (chosenDevice) {
-                            url.search = new URLSearchParams({ device_id: chosenDevice.id });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken
+                }
+            }).then((response) => response.json()
+                .then(data => {
+                    let chosenDevice = null;
+                    data.devices.forEach(device => {
+                        if (device.type === "Smartphone") {
+                            chosenDevice = device
                         }
-                        fetch(url.toString(), {
-                            headers: {
-                                "Authorization": "Bearer " + this.props.accessToken
-                            },
-                            method: 'PUT',
-                            uris: [this.props.song.uri]
-                        })
-                    }))
-        }, 10000);
+                    });
+                    
+                    let bodyData = { uris: [this.props.song.uri] }
+
+                    url = new URL('https://api.spotify.com/v1/me/player/play');
+                    if (chosenDevice) {
+                        url.search = new URLSearchParams({ device_id: chosenDevice.id });
+                    }
+                   
+                    fetch(url.toString(), {
+                        headers: {
+                            "Authorization": "Bearer " + this.props.accessToken
+                        },
+                        method: 'PUT',
+                        body: JSON.stringify(bodyData)
+                    })
+                })
+            )
+
+            // let url = new URL('https://api.spotify.com/v1/me/player/devices');
+            // fetch(url.toString(), {
+            //     headers: {
+            //         "Authorization": "Bearer " + this.props.accessToken
+            //     }
+            // }).then((response) => response.json()
+            //     .then(data => {
+            //         let devices = data.devices;
+            //         let url = new URL('https://api.spotify.com/v1/me/player/queue');
+
+            //         url.search = new URLSearchParams({
+            //             uri: this.props.song.uri
+            //         });
+
+            //         fetch(url.toString(), {
+            //             headers: {
+            //                 "Authorization": "Bearer " + this.props.accessToken
+            //             },
+            //             method: 'POST'
+            //         }).then(data => {
+            //             let url = new URL('https://api.spotify.com/v1/me/player/next');
+            //             fetch(url.toString(), {
+            //                 headers: {
+            //                     "Authorization": "Bearer " + this.props.accessToken
+            //                 },
+            //                 method: 'POST'
+            //             }).then(data => {
+            //                 let chosenDevice = null;
+            //                 devices.forEach(device => {
+            //                     if (device.type === "Smartphone") {
+            //                         chosenDevice = device
+            //                     }
+            //                 });
+            //                 url = new URL('https://api.spotify.com/v1/me/player');
+            //                 fetch(url.toString(), {
+            //                     headers: {
+            //                         "Authorization": "Bearer " + this.props.accessToken
+            //                     },
+            //                     method: 'PUT',
+            //                     uris: [this.props.song.uri]
+            //                 })
+            //             })
+            //         });
+            //     }))
+        }, 5000);
 
     }
 
@@ -179,10 +229,10 @@ class Song extends Component {
                             className={"song__listen-button song__listen-button--spotify"}
                             onClick={() => {
                                 if (!this.isMobile) {
-                                    var win = window.open("https://open.spotify.com/go?uri="+this.props.song.uri+"?play=true")
+                                    var win = window.open("https://open.spotify.com/go?uri=" + this.props.song.uri + "?play=true")
                                     win.focus();
                                 } else {
-                                    var win = window.open(this.props.song.uri+"?highlight="+this.props.song.uri, '_blank');
+                                    var win = window.open(this.props.song.uri + "?highlight=" + this.props.song.uri, '_blank');
                                     win.focus();
                                     this.autoPlay();
                                 }
