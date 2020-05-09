@@ -28,105 +28,138 @@ class Song extends Component {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
     }
 
-    findDevice = () => {
-        if (!this.state.deviceFound && this.state.deviceAttempts < 10) {
-            setTimeout(() => {
-                let url = new URL('https://api.spotify.com/v1/me/player/devices');
-                fetch(url.toString(), {
-                    headers: {
-                        "Authorization": "Bearer " + this.props.accessToken
-                    }
-                }).then((response) => response.json()
-                    .then(data => {
-                        if (!data.error) {
-                            if (this.isMobile()) {
-                                if (data.devices.length > 0) {
-                                    if (this.state.deviceAttempts < 8) {
-                                        let chosenDevice = null;
-                                        data.devices.forEach(device => {
-                                            if (device.type === "Smartphone") {
-                                                chosenDevice = device
-                                            }
-                                        });
-                                        if (chosenDevice) {
-                                            this.setState({ device: chosenDevice, deviceFound: true }, () => this.autoPlay())
-                                        } else {
-                                            this.setState({ deviceFound: false, deviceAttempts: this.state.deviceAttempts + 1 })
-                                        }
-                                    } else {
-                                        let chosenDevice = data.devices[data.devices.length - 1];
-                                        data.devices.forEach(device => {
-                                            if (device.is_active) {
-                                                chosenDevice = device
-                                            }
-                                        });
-                                        data.devices.forEach(device => {
-                                            if (device.type === "Smartphone") {
-                                                chosenDevice = device
-                                            }
-                                        });
-                                        this.setState({ device: chosenDevice, deviceFound: true }, () => this.autoPlay())
-                                    }
-                                } else {
-                                    this.setState({ deviceFound: false, deviceAttempts: this.state.deviceAttempts + 1 })
-                                    this.findDevice();
-                                }
-                            } else {
-                                if (data.devices.length > 0) {
-                                    console.log(data.devices)
-                                    let chosenDevice = data.devices[data.devices.length - 1];
-                                    data.devices.forEach(device => {
-                                        if (device.is_active) {
-                                            chosenDevice = device
-                                        }
-                                    });
-                                    this.setState({ device: chosenDevice, deviceFound: true }, () => this.autoPlay())
-                                } else {
-                                    this.setState({ deviceFound: false, deviceAttempts: this.state.deviceAttempts + 1 })
-                                    this.findDevice();
-                                }
-                            }
-                        } else {
-                            this.setState({ device: false, deviceAttempts: this.state.deviceAttempts + 1 })
-                            this.findDevice();
-                        }
-                    })
-                    .catch((error) => {
-                        this.setState({ criticalError: true, errorMessage: "Could not load recently played" })
-                    })
-                )
-            }, 1000);
-        }
-    }
+    // findDevice = () => {
+    //     if (!this.state.deviceFound && this.state.deviceAttempts < 10) {
+    //         setTimeout(() => {
+    //             let url = new URL('https://api.spotify.com/v1/me/player/devices');
+    //             fetch(url.toString(), {
+    //                 headers: {
+    //                     "Authorization": "Bearer " + this.props.accessToken
+    //                 }
+    //             }).then((response) => response.json()
+    //                 .then(data => {
+    //                     if (!data.error) {
+    //                         if (this.isMobile()) {
+    //                             if (data.devices.length > 0) {
+    //                                 if (this.state.deviceAttempts < 8) {
+    //                                     let chosenDevice = null;
+    //                                     data.devices.forEach(device => {
+    //                                         if (device.type === "Smartphone") {
+    //                                             chosenDevice = device
+    //                                         }
+    //                                     });
+    //                                     if (chosenDevice) {
+    //                                         this.setState({ device: chosenDevice, deviceFound: true }, () => this.autoPlay())
+    //                                     } else {
+    //                                         this.setState({ deviceFound: false, deviceAttempts: this.state.deviceAttempts + 1 })
+    //                                     }
+    //                                 } else {
+    //                                     let chosenDevice = data.devices[data.devices.length - 1];
+    //                                     data.devices.forEach(device => {
+    //                                         if (device.is_active) {
+    //                                             chosenDevice = device
+    //                                         }
+    //                                     });
+    //                                     data.devices.forEach(device => {
+    //                                         if (device.type === "Smartphone") {
+    //                                             chosenDevice = device
+    //                                         }
+    //                                     });
+    //                                     this.setState({ device: chosenDevice, deviceFound: true }, () => this.autoPlay())
+    //                                 }
+    //                             } else {
+    //                                 this.setState({ deviceFound: false, deviceAttempts: this.state.deviceAttempts + 1 })
+    //                                 this.findDevice();
+    //                             }
+    //                         } else {
+    //                             if (data.devices.length > 0) {
+    //                                 console.log(data.devices)
+    //                                 let chosenDevice = data.devices[data.devices.length - 1];
+    //                                 data.devices.forEach(device => {
+    //                                     if (device.is_active) {
+    //                                         chosenDevice = device
+    //                                     }
+    //                                 });
+    //                                 this.setState({ device: chosenDevice, deviceFound: true }, () => this.autoPlay())
+    //                             } else {
+    //                                 this.setState({ deviceFound: false, deviceAttempts: this.state.deviceAttempts + 1 })
+    //                                 this.findDevice();
+    //                             }
+    //                         }
+    //                     } else {
+    //                         this.setState({ device: false, deviceAttempts: this.state.deviceAttempts + 1 })
+    //                         this.findDevice();
+    //                     }
+    //                 })
+    //                 .catch((error) => {
+    //                     this.setState({ criticalError: true, errorMessage: "Could not load recently played" })
+    //                 })
+    //             )
+    //         }, 1000);
+    //     }
+    // }
+
+    // autoPlay = () => {
+    //     console.log(this.state.device)
+    //     if (!this.state.playing && this.state.playAttempts < 30) {
+    //         setTimeout(() => {
+    //             let url = new URL('https://api.spotify.com/v1/me/player/play');
+    //             url.search = new URLSearchParams({ device_id: this.state.device.id });
+    //             fetch(url.toString(), {
+    //                 headers: {
+    //                     "Authorization": "Bearer " + this.props.accessToken
+    //                 },
+    //                 method: 'PUT',
+    //                 uris: [this.props.song.uri]
+    //             }).then((response) => response.json()
+    //                 .then(data => {
+    //                     if (data.okay) {
+    //                         console.log("playing")
+    //                         this.setState({ playing: true });
+    //                     } else {
+    //                         console.log("not playing")
+    //                         this.setState({ playing: false, playAttempts: this.state.playAttempts + 1 })
+    //                         this.autoPlay();
+    //                     }
+    //                 }
+    //                 )
+    //                 .catch(error => this.setState({ playing: true }))
+    //             )
+    //         }, 1000);
+    //     }
+    // }
 
     autoPlay = () => {
-        console.log(this.state.device)
-        if (!this.state.playing && this.state.playAttempts < 30) {
-            setTimeout(() => {
-                let url = new URL('https://api.spotify.com/v1/me/player/play');
-                url.search = new URLSearchParams({ device_id: this.state.device.id });
+        setTimeout(() => {
+            let url = new URL('https://api.spotify.com/v1/me/player/play');
                 fetch(url.toString(), {
                     headers: {
                         "Authorization": "Bearer " + this.props.accessToken
                     },
                     method: 'PUT',
                     uris: [this.props.song.uri]
-                }).then((response) => response.json()
-                    .then(data => {
-                        if (data.okay) {
-                            console.log("playing")
-                            this.setState({ playing: true });
-                        } else {
-                            console.log("not playing")
-                            this.setState({ playing: false, playAttempts: this.state.playAttempts + 1 })
-                            this.autoPlay();
-                        }
-                    }
-                    )
-                    .catch(error => this.setState({ playing: true }))
-                )
-            }, 1000);
-        }
+                })
+            // let url = new URL('https://api.spotify.com/v1/me/player/queue');
+
+            // url.search = new URLSearchParams({
+            //     uri: this.props.song.uri
+            // });
+
+            // fetch(url.toString(), {
+            //     headers: {
+            //         "Authorization": "Bearer " + this.props.accessToken
+            //     },
+            //     method: 'POST'
+            // }).then(data => {
+            //     let url = new URL('https://api.spotify.com/v1/me/player/next');
+            //     fetch(url.toString(), {
+            //         headers: {
+            //             "Authorization": "Bearer " + this.props.accessToken
+            //         },
+            //         method: 'POST'
+            //     })
+            // });
+        }, 10000);
 
     }
 
@@ -148,9 +181,13 @@ class Song extends Component {
                         <button
                             className={"song__listen-button song__listen-button--spotify"}
                             onClick={() => {
-                                var win = window.open("https://open.spotify.com/go?uri="+this.props.song.uri+"?play=true")
-                                // var win = window.open(this.props.song.uri+"?highlight="+this.props.song.uri, '_blank');
-                                win.focus();
+                                if (!this.isMobile) {
+                                    var win = window.open("https://open.spotify.com/go?uri="+this.props.song.uri+"?play=true")
+                                    win.focus();
+                                } else {
+                                    var win = window.open(this.props.song.uri+"?highlight="+this.props.song.uri, '_blank');
+                                    win.focus();
+                                }
                                 // this.setState({deviceFound: false, playing: false}, () => this.findDevice())
                             }} ><FaSpotify className="button-icon" /> Listen on Spotify</button>
                     </div>
