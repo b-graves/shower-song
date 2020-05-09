@@ -33,6 +33,7 @@ class FindSongWithoutAccount extends Component {
         timeSubmitted: false,
         recap: false,
         youtubeResults: true,
+        genreMessage: false,
         preferences: {
             familiar: false,
             energy: 50,
@@ -50,42 +51,42 @@ class FindSongWithoutAccount extends Component {
                 },
                 {
                     title: "Classical",
-                    seeds: ["classical","classical","classical","classical","classical","classical"],
+                    seeds: ["classical", "classical", "classical", "classical", "classical", "classical"],
                     selected: false
                 },
                 {
                     title: "Dance",
-                    seeds: ["dance","dance","dance", "disco", "party", "idm"],
+                    seeds: ["dance", "dance", "dance", "disco", "party", "idm"],
                     selected: false
                 },
                 {
                     title: "Electronic",
-                    seeds: ["electronic","electronic","electronic","electronic", "electronic", "electro", "breakbeat", "drum-and-bass", "dub", "dubstep", "garage", "idm", "trance"],
+                    seeds: ["electronic", "electronic", "electronic", "electronic", "electronic", "electro", "breakbeat", "drum-and-bass", "dub", "dubstep", "garage", "idm", "trance"],
                     selected: false
                 },
                 {
                     title: "Folk",
-                    seeds: ["folk","folk","folk", "country", "acoustic"],
+                    seeds: ["folk", "folk", "folk", "country", "acoustic"],
                     selected: false
                 },
                 {
                     title: "Hip Hop",
-                    seeds: ["hip-hop","hip-hop","hip-hop","hip-hop","hip-hop","hip-hop"],
+                    seeds: ["hip-hop", "hip-hop", "hip-hop", "hip-hop", "hip-hop", "hip-hop"],
                     selected: false
                 },
                 {
                     title: "House",
-                    seeds: ["house","house","house","house","deep-house", "progressive-house", "progressive-house", "chicago-house", "deep-house", "breakbeat", "garage"],
+                    seeds: ["house", "house", "house", "house", "deep-house", "progressive-house", "progressive-house", "chicago-house", "deep-house", "breakbeat", "garage"],
                     selected: false
                 },
                 {
                     title: "Indie",
-                    seeds: ["indie","indie", "indie", "indie-pop", "alt-rock", "alternative"],
+                    seeds: ["indie", "indie", "indie", "indie-pop", "alt-rock", "alternative"],
                     selected: false
                 },
                 {
                     title: "Jazz",
-                    seeds: ["jazz","jazz","jazz", "blues", "funk"],
+                    seeds: ["jazz", "jazz", "jazz", "blues", "funk"],
                     selected: false
                 },
                 {
@@ -100,27 +101,27 @@ class FindSongWithoutAccount extends Component {
                 },
                 {
                     title: "Pop",
-                    seeds: ["pop","pop", "pop", "pop","pop","pop", "indie-pop", "synth-pop", "k-pop", "j-pop", "afrobeat"],
+                    seeds: ["pop", "pop", "pop", "pop", "pop", "pop", "indie-pop", "synth-pop", "k-pop", "j-pop", "afrobeat"],
                     selected: false
                 },
                 {
                     title: "Reggae",
-                    seeds: ["reggae","reggae","reggae","reggae","reggae"],
+                    seeds: ["reggae", "reggae", "reggae", "reggae", "reggae"],
                     selected: false
                 },
                 {
                     title: "Rock",
-                    seeds: ["rock","rock","rock","rock", "hard-rock", "alt-rock", "rock-n-roll", "grunge", "psych-rock", "guitar", "j-rock"],
+                    seeds: ["rock", "rock", "rock", "rock", "hard-rock", "alt-rock", "rock-n-roll", "grunge", "psych-rock", "guitar", "j-rock"],
                     selected: false
                 },
                 {
                     title: "Soul",
-                    seeds: ["soul","soul","soul","soul","soul","soul"],
+                    seeds: ["soul", "soul", "soul", "soul", "soul", "soul"],
                     selected: false
                 },
                 {
                     title: "Techno",
-                    seeds: ["techno","techno","techno","minimal-techno","minimal-techno", "detroit-techno", "minimal-techno", "industrial"],
+                    seeds: ["techno", "techno", "techno", "minimal-techno", "minimal-techno", "detroit-techno", "minimal-techno", "industrial"],
                     selected: false
                 },
             ]
@@ -147,15 +148,9 @@ class FindSongWithoutAccount extends Component {
                 min_duration_ms: this.minsToMs(this.state.preferences.duration - 0.25),
                 max_duration_ms: this.minsToMs(this.state.preferences.duration + 0.25),
                 target_accouticness: this.state.preferences.acousticness / 100,
-                min_acousticness: (this.state.preferences.acousticness / 100) - 0.4,
-                max_acousticness: (this.state.preferences.acousticness / 100) + 0.4,
                 // target_danceability: this.state.preferences.energy / 100,
                 target_energy: this.state.preferences.energy / 100,
-                min_energy: (this.state.preferences.energy / 100) - 0.4,
-                max_energy: (this.state.preferences.energy / 100) + 0.4,
                 target_instrumentalness: this.state.preferences.instrumentalness / 100,
-                min_instrumentalness: (this.state.preferences.instrumentalness / 100) - 0.4,
-                max_instrumentalness: (this.state.preferences.instrumentalness / 100) + 0.4,
                 // target_popularity: this.state.preferences.popularity,
                 // target_valence: this.state.preferences.energy / 100,
             });
@@ -230,13 +225,17 @@ class FindSongWithoutAccount extends Component {
     }
 
     checkYt = (song) => {
-        const Http = new XMLHttpRequest();
-        const url = "https://cors-anywhere.herokuapp.com/https://www.youtube.com/results?search_query=" + song.external_ids.isrc;
-        Http.open("GET", url);
-        Http.send();
+        if (song.external_ids && song.external_ids.isrc) {
+            const Http = new XMLHttpRequest();
+            const url = "https://cors-anywhere.herokuapp.com/https://www.youtube.com/results?search_query=" + song.external_ids.isrc;
+            Http.open("GET", url);
+            Http.send();
 
-        Http.onreadystatechange = (e) => {
-            this.setState({ youtubeResults: !Http.responseText.includes("No results found") })
+            Http.onreadystatechange = (e) => {
+                this.setState({ youtubeResults: !Http.responseText.includes("No results found") })
+            }
+        } else {
+            this.setState({ youtubeResults: false })
         }
     }
 
@@ -259,6 +258,10 @@ class FindSongWithoutAccount extends Component {
             offset: 0
         })
         setTimeout(() => callback(), 750)
+    }
+
+    isTrue = (element, index, array) => {
+        return element;
     }
 
     render() {
@@ -344,11 +347,11 @@ class FindSongWithoutAccount extends Component {
                                             </Col>
                                         </Row>
                                     </Container>
-                                    <button className="preferences__find-button"
+                                    {this.state.preferences.genres.map(genre => genre.selected).some(this.isTrue) ? < button className="preferences__find-button"
                                         onClick={() => {
                                             this.onClick();
                                         }}
-                                    >Find your perfect song</button>
+                                    >Find your perfect song</button> : null}
                                 </FullHeight>
                             </Element>
                             :
@@ -385,54 +388,59 @@ class FindSongWithoutAccount extends Component {
                                             />
                                         </Col>
                                     </Row>
-                                    <button className="preferences__continue-button--inline"
+                                    {this.state.preferences.genres.map(genre => genre.selected).some(this.isTrue) ? <button className="preferences__continue-button--inline"
                                         onClick={() => {
                                             this.onClick();
                                         }}
-                                    >Find your perfect song</button>
+                                    >Find your perfect song</button> : null}
                                 </Container>
                             </FullHeight>
-                        : null}
-                    {this.state.submitted ?
-                        <Element name="searching">
-                            <FullHeight className="searching">
-                                <Container className="central-content">
-                                    <Row>
-                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                            <div>
-                                                <img src={Animation} width={"50%"} alt="loading animation " />
+                        : null
+                    }
+                    {
+                        this.state.submitted ?
+                            <Element name="searching">
+                                <FullHeight className="searching">
+                                    <Container className="central-content">
+                                        <Row>
+                                            <Col sm="12" md={{ size: 6, offset: 3 }}>
                                                 <div>
-                                                    Finding Your Perfect Shower Song...
+                                                    <img src={Animation} width={"50%"} alt="loading animation " />
+                                                    <div>
+                                                        Finding Your Perfect Shower Song...
                                             </div>
-                                            </div>
-                                        </Col>
-                                    </Row>
-                                </Container>
-                            </FullHeight>
-                        </Element>
-                        : null}
-                    {this.state.song ?
-                        <Element name="result">
-                            <FullHeight className="song-result result-page__background" >
-                                <Container className="central-content">
-                                    <Row>
-                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
-                                            <Song
-                                                song={this.state.song}
-                                                preferences={this.state.preferences}
-                                                nothingKnown={this.state.nothingKnown}
-                                                showSpotify={true}
-                                                showYouTube={false}
-                                                accessToken={this.props.accessToken}
-                                                youtubeResults={this.state.youtubeResults}
-                                            />
-                                        </Col>
-                                    </Row>
-                                </Container>
-                            </FullHeight>
-                        </Element>
-                        : null}
-                </div>
+                                                </div>
+                                            </Col>
+                                        </Row>
+                                    </Container>
+                                </FullHeight>
+                            </Element>
+                            : null
+                    }
+                    {
+                        this.state.song ?
+                            <Element name="result">
+                                <FullHeight className="song-result result-page__background" >
+                                    <Container className="central-content">
+                                        <Row>
+                                            <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                                <Song
+                                                    song={this.state.song}
+                                                    preferences={this.state.preferences}
+                                                    nothingKnown={this.state.nothingKnown}
+                                                    showSpotify={true}
+                                                    showYouTube={false}
+                                                    accessToken={this.props.accessToken}
+                                                    youtubeResults={this.state.youtubeResults}
+                                                />
+                                            </Col>
+                                        </Row>
+                                    </Container>
+                                </FullHeight>
+                            </Element>
+                            : null
+                    }
+                </div >
         );
     }
 }
