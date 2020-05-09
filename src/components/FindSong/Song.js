@@ -152,7 +152,7 @@ class Song extends Component {
                                 // var win = window.open(this.props.song.uri+"?highlight="+this.props.song.uri, '_blank');
                                 win.focus();
                                 // this.setState({deviceFound: false, playing: false}, () => this.findDevice())
-                            }} ><FaSpotify className="button-icon" /> Listen on Spotify...</button>
+                            }} ><FaSpotify className="button-icon" /> Listen on Spotify</button>
                     </div>
                     <div>
                         <button
