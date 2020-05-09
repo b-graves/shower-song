@@ -103,12 +103,12 @@ class FindSongWithAccount extends Component {
                                 .then(data => {
                                     if (!data.error) {
                                         this.setState({ topTracks: { ...this.state.topTracks, items: this.state.topTracks.items.concat(data.tracks) } });
-                                    } else {
-                                        this.setState({ topArtists: { items: [] } })
                                     }
                                 })
                             )
                         })
+                    } else {
+                        this.setState({ topArtists: { items: [] } })
                     }
                 })
                 .catch((error) => {
@@ -279,18 +279,19 @@ class FindSongWithAccount extends Component {
             url.search = new URLSearchParams({
                 limit: 10,
                 ["seed_" + type]: values.slice(i, i + 5).map(value => type === "genres" ? value : value.id).join(","),
+                target_duration_ms: this.minsToMs(this.state.preferences.duration),
                 min_duration_ms: this.minsToMs(this.state.preferences.duration - 0.25),
                 max_duration_ms: this.minsToMs(this.state.preferences.duration + 0.25),
                 target_accouticness: this.state.preferences.acousticness / 100,
-                min_acousticness: (this.state.preferences.acousticness / 100)-0.4,
-                max_acousticness: (this.state.preferences.acousticness / 100)+0.4,
+                min_acousticness: (this.state.preferences.acousticness / 100) - 0.4,
+                max_acousticness: (this.state.preferences.acousticness / 100) + 0.4,
                 target_danceability: this.state.preferences.energy / 100,
                 target_energy: this.state.preferences.energy / 100,
-                min_energy: (this.state.preferences.energy / 100)-0.4,
-                max_energy: (this.state.preferences.energy / 100)+0.4,
+                min_energy: (this.state.preferences.energy / 100) - 0.4,
+                max_energy: (this.state.preferences.energy / 100) + 0.4,
                 target_instrumentalness: this.state.preferences.instrumentalness / 100,
-                min_instrumentalness: (this.state.preferences.instrumentalness / 100)-0.4,
-                max_instrumentalness: (this.state.preferences.instrumentalness / 100)+0.4,
+                min_instrumentalness: (this.state.preferences.instrumentalness / 100) - 0.4,
+                max_instrumentalness: (this.state.preferences.instrumentalness / 100) + 0.4,
                 // target_popularity: this.state.preferences.popularity,
                 target_valence: this.state.preferences.energy / 100,
             });
@@ -334,18 +335,38 @@ class FindSongWithAccount extends Component {
 
             const genresSorted = Object.keys(topGenres).sort(function (a, b) { return topGenres[b] - topGenres[a] })
 
-            this.setState({ gettingReccomendations: true, generating: true, candidates: this.state.discoverWeekly }, () => {
-                setTimeout(() => {
-                    this.getReccommendations("tracks", this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks).concat(this.state.discoverWeekly))
-                    this.getReccommendations("artists", this.state.topArtists.items.concat(this.state.secondaryArtists))
-                    if (genresSorted.length > 0) {
-                        this.getReccommendations("genres", genresSorted)
-                    }
-                    this.setState({ gettingReccomendations: false })
-                }, 1500)
-            });
+            let tracks = this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks).concat(this.state.discoverWeekly).filter(value => value !== undefined && value !== null)
+            let artists = this.state.topArtists.items.concat(this.state.secondaryArtists).filter(value => value !== undefined && value !== null)
+            console.log(tracks)
+            console.log(artists)
+            if (tracks.length === 0) {
+                this.setState({ criticalError: true, errorMessage: "no top tracks" })
+            } else if (artists.length === 0) {
+                this.setState({ criticalError: true, errorMessage: "no top artists" })
+            } else {
+
+                this.setState({ gettingReccomendations: true, generating: true, candidates: this.state.discoverWeekly }, () => {
+                    setTimeout(() => {
+                        this.getReccommendations("tracks", tracks)
+                        this.getReccommendations("artists", artists)
+                        if (genresSorted.length > 0) {
+                            this.getReccommendations("genres", genresSorted)
+                        }
+                        this.setState({ gettingReccomendations: false })
+                    }, 1500)
+                });
+            }
         } else {
-            this.setState({ generating: true, candidates: this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks) })
+            let tracks = this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks).filter(value => value !== undefined && value !== null)
+            let artists = this.state.topArtists.items.concat(this.state.secondaryArtists).filter(value => value !== undefined && value !== null)
+
+            if (tracks.length === 0) {
+                this.setState({ criticalError: true, errorMessage: "no top tracks" })
+            } else if (artists.length === 0) {
+                this.setState({ criticalError: true, errorMessage: "no top artists" })
+            } else {
+            this.setState({ generating: true, candidates: tracks })
+            }
         }
     }
 
@@ -456,7 +477,8 @@ class FindSongWithAccount extends Component {
 
     componentDidUpdate() {
         if (!this.state.criticalError) {
-            if (!this.state.song && this.state.discoverWeekly && this.state.topArtists && this.state.topTracks && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
+            console.log(this.state)
+            if (!this.state.song && this.state.discoverWeekly && this.state.topArtists && this.state.topTracks.items && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
                 this.getCandidates()
             } else if (!this.state.candidatesFiltered && Object.values(this.state.awaiting).every(awaiting => !awaiting) && this.state.generating && !this.state.gettingReccomendations) {
                 this.filterCandidates()
@@ -536,7 +558,7 @@ class FindSongWithAccount extends Component {
                                         </div>
                                         <Preferences
                                             preferences={this.state.preferences}
-                                            setPreferences={preferences => {console.log(preferences); this.setState({ preferences })}}
+                                            setPreferences={preferences => { console.log(preferences); this.setState({ preferences }) }}
                                             showTime={true}
                                             showFamiliarity={false}
                                             showGenres={false}
