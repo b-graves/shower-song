@@ -179,14 +179,21 @@ class FindSongWithoutAccount extends Component {
 
     onClick = () => {
         let seeds = []
+        let timeSubmitted = new Date();
         this.setState({
             candidates: [],
+            timeSubmitted,
             song: null,
             awaiting: {},
             submitted: true,
             recap: false,
             youtubeResults: true
         }, () => this.scrollTo("searching"))
+        setTimeout(() => {
+            if (this.state.timeSubmitted === timeSubmitted && !this.state.song) {
+                this.setState({ criticalError: true, errorMessage: "timeout" })
+            }
+        }, 30000)
         setTimeout(() => {
             this.state.preferences.genres.forEach(genre => {
                 if (genre.selected) {
@@ -411,7 +418,7 @@ class FindSongWithoutAccount extends Component {
                                                 <div>
                                                     <img src={Animation} width={"50%"} alt="loading animation " />
                                                     <div>
-                                                        Finding Your Perfect Shower Song...
+                                                        Finding your shower song...
                                             </div>
                                                 </div>
                                             </Col>

@@ -59,8 +59,10 @@ class FindSongWithAccount extends Component {
     }
 
     submitPreferences = () => {
+        let timeSubmitted = new Date();
         this.setState({
             submitted: true,
+            timeSubmitted,
             recap: true,
             candidates: [],
             song: null,
@@ -81,6 +83,11 @@ class FindSongWithAccount extends Component {
             nothingKnown: false,
             youtubeResults: true
         }, () => this.scrollTo("searching"))
+        setTimeout(() => {
+            if (this.state.timeSubmitted === timeSubmitted && !this.state.song) {
+                this.setState({ criticalError: true, errorMessage: "timeout" })
+            }
+        }, 30000)
         setTimeout(() => {
             let url = new URL('https://api.spotify.com/v1/me/top/artists');
             url.search = new URLSearchParams({ limit: 50 });
@@ -658,7 +665,7 @@ class FindSongWithAccount extends Component {
                                             <div>
                                                 <img src={Animation} width={"50%"} alt="loading animation " />
                                                 <div>
-                                                    Finding Your Perfect Shower Song...
+                                                    Finding your shower song...
                                             </div>
                                             </div>
                                         </Col>
