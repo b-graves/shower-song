@@ -478,6 +478,7 @@ class FindSongWithAccount extends Component {
     }
 
     componentDidUpdate() {
+        console.log(this.state.awaiting)
         if (!this.state.criticalError) {
             if (!this.state.song && this.state.discoverWeekly && this.state.topArtists && this.state.topTracks.items && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
                 this.getCandidates()
@@ -511,7 +512,7 @@ class FindSongWithAccount extends Component {
     }
 
     goHome = () => {
-        document.location.href="/";
+        document.location.href = "/";
     }
 
     render() {
@@ -546,7 +547,7 @@ class FindSongWithAccount extends Component {
                                     </div>
                                             <div className="welcome-page__alt-option">
                                                 If you would prefer to not share your listening data and select your favourite genres manually <span onClick={() => this.props.disconnect()} className="link">click here</span>
-                        </div>
+                                            </div>
 
                                         </Col>
                                     </Row>
@@ -684,6 +685,9 @@ class FindSongWithAccount extends Component {
                                         </Col>
                                     </Row>
                                 </Container>
+                                <div className={"song__enjoy"}>
+                                    Enjoy your {Math.round(this.msToMins(this.state.song.duration_ms) * 2) / 2} Minute Shower!
+                    </div>
                             </FullHeight>
                         </Element>
                         : null}

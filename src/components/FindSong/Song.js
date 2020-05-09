@@ -227,9 +227,6 @@ class Song extends Component {
                     {false ? <iframe title={"yt"} id="ytplayer" type="text/html" width={"100%"} height="360"
                         src={"https://www.youtube.com/embed?listType=search&list=" + this.props.song.external_ids.isrc}
                         frameborder="0"></iframe> : null}
-                    <div className={"song__enjoy"}>
-                        Enjoy your {Math.round(this.msToMins(this.props.song.duration_ms) * 2) / 2} Minute Shower!
-                    </div>
                 </div>
             </div>
         );
