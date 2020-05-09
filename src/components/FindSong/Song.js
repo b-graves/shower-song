@@ -131,34 +131,31 @@ class Song extends Component {
 
     autoPlay = () => {
         setTimeout(() => {
-            let url = new URL('https://api.spotify.com/v1/me/player/play');
+            let url = new URL('https://api.spotify.com/v1/me/player/devices');
                 fetch(url.toString(), {
                     headers: {
                         "Authorization": "Bearer " + this.props.accessToken
-                    },
-                    method: 'PUT',
-                    uris: [this.props.song.uri]
-                })
-            // let url = new URL('https://api.spotify.com/v1/me/player/queue');
-
-            // url.search = new URLSearchParams({
-            //     uri: this.props.song.uri
-            // });
-
-            // fetch(url.toString(), {
-            //     headers: {
-            //         "Authorization": "Bearer " + this.props.accessToken
-            //     },
-            //     method: 'POST'
-            // }).then(data => {
-            //     let url = new URL('https://api.spotify.com/v1/me/player/next');
-            //     fetch(url.toString(), {
-            //         headers: {
-            //             "Authorization": "Bearer " + this.props.accessToken
-            //         },
-            //         method: 'POST'
-            //     })
-            // });
+                    }
+                }).then((response) => response.json()
+                    .then(data => {
+                        let chosenDevice = null;
+                        data.devices.forEach(device => {
+                            if (device.type === "Smartphone") {
+                                chosenDevice = device
+                            }
+                        });
+                        url = new URL('https://api.spotify.com/v1/me/player/play');
+                        if (chosenDevice) {
+                            url.search = new URLSearchParams({ device_id: chosenDevice.id });
+                        }
+                        fetch(url.toString(), {
+                            headers: {
+                                "Authorization": "Bearer " + this.props.accessToken
+                            },
+                            method: 'PUT',
+                            uris: [this.props.song.uri]
+                        })
+                    }))
         }, 10000);
 
     }
@@ -187,9 +184,10 @@ class Song extends Component {
                                 } else {
                                     var win = window.open(this.props.song.uri+"?highlight="+this.props.song.uri, '_blank');
                                     win.focus();
+                                    this.autoPlay();
                                 }
                                 // this.setState({deviceFound: false, playing: false}, () => this.findDevice())
-                            }} ><FaSpotify className="button-icon" /> Listen on Spotify</button>
+                            }} ><FaSpotify className="button-icon" /> Listen on Spotify...</button>
                     </div>
                     <div>
                         <button
