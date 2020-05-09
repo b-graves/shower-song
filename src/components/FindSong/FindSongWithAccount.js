@@ -31,7 +31,7 @@ class FindSongWithAccount extends Component {
         topTracks: {
             items: []
         },
-        secondaryArtists: null,
+        secondaryArtists: [],
         secondaryTracks: null,
         recentTracks: null,
         discoverWeekly: null,
@@ -70,7 +70,7 @@ class FindSongWithAccount extends Component {
             topTracks: {
                 items: []
             },
-            secondaryArtists: null,
+            secondaryArtists: [],
             secondaryTracks: null,
             recentTracks: null,
             discoverWeekly: null,
@@ -99,7 +99,8 @@ class FindSongWithAccount extends Component {
                 .then(data => {
                     if (!data.error) {
                         this.setState({ topArtists: data })
-                        this.shuffle(data.items).slice(0, 5).forEach(artist => {
+                        this.shuffle(data.items).slice(0, 100).forEach(artist => {
+                            console.log(artist.name)
                             let url = new URL('https://api.spotify.com/v1/artists/' + artist.id + '/top-tracks');
                             url.search = new URLSearchParams({ country: "from_token" });
                             fetch(url.toString(), {
@@ -124,6 +125,42 @@ class FindSongWithAccount extends Component {
                 })
             )
 
+            url = new URL('https://api.spotify.com/v1/me/top/artists');
+            url.search = new URLSearchParams({ limit: 50, time_range: "short_term" });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken,
+                }
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        this.setState({ secondaryArtists: this.state.secondaryArtists.concat(data.items) })
+                    } 
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "Could not load top artists" })
+                })
+            )
+
+            url = new URL('https://api.spotify.com/v1/me/top/artists');
+            url.search = new URLSearchParams({ limit: 50, time_range: "long_term" });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken,
+                }
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        this.setState({ secondaryArtists: this.state.secondaryArtists.concat(data.items) })
+                    } 
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.setState({ criticalError: true, errorMessage: "Could not load top artists" })
+                })
+            )
+
             url = new URL('https://api.spotify.com/v1/me/top/tracks');
             url.search = new URLSearchParams({ limit: 50 });
             fetch(url.toString(), {
@@ -143,25 +180,63 @@ class FindSongWithAccount extends Component {
                 })
             )
 
-            url = new URL('https://api.spotify.com/v1/me/albums');
-            url.search = new URLSearchParams({ limit: 50 });
+            url = new URL('https://api.spotify.com/v1/me/top/tracks');
+            url.search = new URLSearchParams({ limit: 50, time_range: "long_term" });
             fetch(url.toString(), {
                 headers: {
-                    "Authorization": "Bearer " + this.props.accessToken,
-
+                    "Authorization": "Bearer " + this.props.accessToken
                 }
             }).then((response) => response.json()
                 .then(data => {
                     if (!data.error) {
-                        this.setState({ secondaryArtists: data.items.map(album => album.album.artists[0]) })
+                        this.setState({ topTracks: { ...this.state.topTracks, items: this.state.topTracks.items.concat(data.items) } })
                     } else {
-                        this.setState({ secondaryArtists: [] })
+                        this.setState({ topTracks: { items: [] } })
                     }
                 })
                 .catch((error) => {
-                    this.setState({ criticalError: true, errorMessage: "Could not load top albums" })
+                    this.setState({ criticalError: true, errorMessage: "Could not load top tracks" })
                 })
             )
+
+            url = new URL('https://api.spotify.com/v1/me/top/tracks');
+            url.search = new URLSearchParams({ limit: 50, time_range: "short_term" });
+            fetch(url.toString(), {
+                headers: {
+                    "Authorization": "Bearer " + this.props.accessToken
+                }
+            }).then((response) => response.json()
+                .then(data => {
+                    if (!data.error) {
+                        this.setState({ topTracks: { ...this.state.topTracks, items: this.state.topTracks.items.concat(data.items) } })
+                    } else {
+                        this.setState({ topTracks: { items: [] } })
+                    }
+                })
+                .catch((error) => {
+                    this.setState({ criticalError: true, errorMessage: "Could not load top tracks" })
+                })
+            )
+
+            // url = new URL('https://api.spotify.com/v1/me/albums');
+            // url.search = new URLSearchParams({ limit: 50 });
+            // fetch(url.toString(), {
+            //     headers: {
+            //         "Authorization": "Bearer " + this.props.accessToken,
+
+            //     }
+            // }).then((response) => response.json()
+            //     .then(data => {
+            //         if (!data.error) {
+            //             this.setState({ secondaryArtists: data.items.map(album => album.album.artists[0]) })
+            //         } else {
+            //             this.setState({ secondaryArtists: [] })
+            //         }
+            //     })
+            //     .catch((error) => {
+            //         this.setState({ criticalError: true, errorMessage: "Could not load top albums" })
+            //     })
+            // )
 
             url = new URL('https://api.spotify.com/v1/me/tracks');
             url.search = new URLSearchParams({ limit: 50 });
@@ -365,7 +440,7 @@ class FindSongWithAccount extends Component {
                 });
             }
         } else {
-            let tracks = this.state.topTracks.items.concat(this.state.secondaryTracks).concat(this.state.recentTracks).filter(value => value !== undefined && value !== null)
+            let tracks = this.state.topTracks.items.filter(value => value !== undefined && value !== null)
             let artists = this.state.topArtists.items.concat(this.state.secondaryArtists).filter(value => value !== undefined && value !== null)
 
             if (tracks.length === 0) {
@@ -381,8 +456,8 @@ class FindSongWithAccount extends Component {
     filterCandidates = () => {
         let candidates = this.state.candidates.filter(value => value !== undefined && value !== null)
         if (!this.state.preferences.familiar || this.state.nothingKnown) {
-            const topArtistIds = this.state.topArtists.items.map(artist => artist.id);
-            candidates = candidates.filter(candidate => !topArtistIds.includes(candidate.artists[0].id));
+            // const topArtistIds = this.state.topArtists.items.map(artist => artist.id);
+            // candidates = candidates.filter(candidate => !topArtistIds.includes(candidate.artists[0].id));
 
             let topTracks = {};
 
@@ -407,7 +482,7 @@ class FindSongWithAccount extends Component {
 
             this.setState({ candidates: topTracks.map(track => track.track), candidatesFiltered: true })
         } else {
-            this.setState({ candidatesFiltered: true, candidates: candidates.filter(candidate => candidate.duration_ms >= this.minsToMs(this.state.preferences.duration - 0.25) && candidate.duration_ms <= this.minsToMs(this.state.preferences.duration + 0.25)) })
+            this.setState({ candidatesFiltered: true, candidates: candidates.filter(candidate => candidate.duration_ms >= this.minsToMs(this.state.preferences.duration - 0.5) && candidate.duration_ms <= this.minsToMs(this.state.preferences.duration + 0.5)) })
         }
     }
 
@@ -433,13 +508,30 @@ class FindSongWithAccount extends Component {
 
     getFeatures = () => {
         if (this.state.candidates.length === 0) {
-            this.setState({ criticalError: true, errorMessage: "no songs" })
+            if (this.state.preferences.familiar) {
+                console.log("nothing known")
+                this.setState({
+                    submitted: true,
+                    recap: true,
+                    candidates: [],
+                    song: null,
+                    generating: false,
+                    gettingReccomendations: false,
+                    candidatesFiltered: false,
+                    awaiting: {},
+                    awaitingFeatures: false,
+                    nothingKnown: true,
+                    youtubeResults: true
+                })
+            } else {
+                this.setState({ criticalError: true, errorMessage: "no songs" })
+            }
         } else {
             this.setState({ awaitingFeatures: true }, () => {
                 let url = new URL('https://api.spotify.com/v1/audio-features');
 
                 url.search = new URLSearchParams({
-                    ids: this.state.candidates.slice(0, 100).map(candidate => candidate.id)
+                    ids: this.shuffle(this.state.candidates).slice(0, 100).map(candidate => candidate.id)
                 });
 
                 fetch(url.toString(), {
@@ -460,10 +552,15 @@ class FindSongWithAccount extends Component {
                             );
                             audioFeatures.sort(function (a, b) { return a.mse - b.mse })
                             let bestMatch = audioFeatures[0]
-                            audioFeatures = audioFeatures.filter(a => a.mse <= bestMatch.mse + 0.1)
+                            console.log(audioFeatures.map(f => f.mse))
+                            console.log(audioFeatures.map(f => {return {energy: f.energy, instrumentalness: f.instrumentalness, acousticness: f.acousticness, mse: f.mse}}))
+                            audioFeatures = audioFeatures.filter(a => a.mse <= bestMatch.mse + 0.05)
+                            console.log(audioFeatures.map(f => f.mse))
+                            console.log(audioFeatures.map(f => {return {energy: f.energy, instrumentalness: f.instrumentalness, acousticness: f.acousticness, mse: f.mse}}))
                             bestMatch = this.randomItem(audioFeatures);
                             console.log(bestMatch)
                             this.state.candidates.forEach(candidate => {
+                                
                                 if (candidate.id === bestMatch.id) {
                                     this.checkYt(candidate)
                                     this.setState({ song: candidate }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
@@ -485,13 +582,15 @@ class FindSongWithAccount extends Component {
     }
 
     componentDidUpdate() {
-        console.log(this.state.awaiting)
         if (!this.state.criticalError) {
             if (!this.state.song && this.state.discoverWeekly && this.state.topArtists && this.state.topTracks.items && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
+                console.log("get")
                 this.getCandidates()
             } else if (!this.state.candidatesFiltered && Object.values(this.state.awaiting).every(awaiting => !awaiting) && this.state.generating && !this.state.gettingReccomendations) {
+                console.log("filter")
                 this.filterCandidates()
             } else if (this.state.candidatesFiltered && !this.state.awaitingFeatures) {
+                console.log("decide")
                 this.getFeatures()
             }
         }

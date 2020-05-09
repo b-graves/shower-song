@@ -267,13 +267,13 @@ padding-right: 10px;
 }
 
 .genre-button {
-    font-size: 0.8em !important;
+    font-size: 1em !important;
+    padding: 6px 0px !important;
     background-color: transparent !important;
     border: 2px solid white !important;
     width: 25% !important;
 }
 
 .genre-button--active {
-    font-size: 0.8em !important;
     background-color: #29c59e !important;
 }

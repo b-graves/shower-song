@@ -46,47 +46,47 @@ class FindSongWithoutAccount extends Component {
             genres: [
                 {
                     title: "Ambient",
-                    seeds: ["ambient", "ambient", "ambient", "ambient", "sleep", "chill"],
+                    seeds: ["ambient"],
                     selected: false
                 },
                 {
                     title: "Classical",
-                    seeds: ["classical", "classical", "classical", "classical", "classical", "classical"],
+                    seeds: ["classical"],
                     selected: false
                 },
                 {
                     title: "Dance",
-                    seeds: ["dance", "dance", "dance", "disco", "party", "idm"],
+                    seeds: ["dance"],
                     selected: false
                 },
                 {
                     title: "Electronic",
-                    seeds: ["electronic", "electronic", "electronic", "electronic", "electronic", "electro", "breakbeat", "drum-and-bass", "dub", "dubstep", "garage", "idm", "trance"],
+                    seeds: ["electronic"],
                     selected: false
                 },
                 {
                     title: "Folk",
-                    seeds: ["folk", "folk", "folk", "country", "acoustic"],
+                    seeds: ["folk"],
                     selected: false
                 },
                 {
                     title: "Hip Hop",
-                    seeds: ["hip-hop", "hip-hop", "hip-hop", "hip-hop", "hip-hop", "hip-hop"],
+                    seeds: ["hip-hop"],
                     selected: false
                 },
                 {
                     title: "House",
-                    seeds: ["house", "house", "house", "house", "deep-house", "progressive-house", "progressive-house", "chicago-house", "deep-house", "breakbeat", "garage"],
+                    seeds: ["house", "deep-house", "progressive-house", "chicago-house"],
                     selected: false
                 },
                 {
                     title: "Indie",
-                    seeds: ["indie", "indie", "indie", "indie-pop", "alt-rock", "alternative"],
+                    seeds: ["indie", "indie-pop"],
                     selected: false
                 },
                 {
                     title: "Jazz",
-                    seeds: ["jazz", "jazz", "jazz", "blues", "funk"],
+                    seeds: ["jazz"],
                     selected: false
                 },
                 {
@@ -101,27 +101,27 @@ class FindSongWithoutAccount extends Component {
                 },
                 {
                     title: "Pop",
-                    seeds: ["pop", "pop", "pop", "pop", "pop", "pop", "indie-pop", "synth-pop", "k-pop", "j-pop", "afrobeat"],
+                    seeds: ["pop","indie-pop", "synth-pop"],
                     selected: false
                 },
                 {
                     title: "Reggae",
-                    seeds: ["reggae", "reggae", "reggae", "reggae", "reggae"],
+                    seeds: ["reggae"],
                     selected: false
                 },
                 {
                     title: "Rock",
-                    seeds: ["rock", "rock", "rock", "rock", "hard-rock", "alt-rock", "rock-n-roll", "grunge", "psych-rock", "guitar", "j-rock"],
+                    seeds: ["rock", "hard-rock", "alt-rock", "rock-n-roll"],
                     selected: false
                 },
                 {
                     title: "Soul",
-                    seeds: ["soul", "soul", "soul", "soul", "soul", "soul"],
+                    seeds: ["soul"],
                     selected: false
                 },
                 {
                     title: "Techno",
-                    seeds: ["techno", "techno", "techno", "minimal-techno", "minimal-techno", "detroit-techno", "minimal-techno", "industrial"],
+                    seeds: ["techno", "minimal-techno", "detroit-techno", "minimal-techno"],
                     selected: false
                 },
             ]
@@ -146,7 +146,7 @@ class FindSongWithoutAccount extends Component {
         values = this.shuffle(values.filter(value => value !== undefined))
         for (let i = 0; i < values.length; i += 5) {
             url.search = new URLSearchParams({
-                limit: 100,
+                limit: 10,
                 ["seed_" + type]: values.slice(i, i + 5).map(value => type === "genres" ? value : value.id).join(","),
                 target_duration_ms: this.minsToMs(this.state.preferences.duration),
                 min_duration_ms: this.minsToMs(this.state.preferences.duration - 0.25),
@@ -186,8 +186,8 @@ class FindSongWithoutAccount extends Component {
             song: null,
             awaiting: {},
             submitted: true,
-            recap: false,
-            youtubeResults: true
+            youtubeResults: true,
+            awaitingFeatures: false
         }, () => this.scrollTo("searching"))
         setTimeout(() => {
             if (this.state.timeSubmitted === timeSubmitted && !this.state.song) {
@@ -218,12 +218,79 @@ class FindSongWithoutAccount extends Component {
             }))
     }
 
+    getFeatures = () => {
+        if (this.state.candidates.length === 0) {
+                this.setState({ criticalError: true, errorMessage: "no songs" })
+        } else {
+            this.setState({ awaitingFeatures: true }, () => {
+                let url = new URL('https://api.spotify.com/v1/audio-features');
+
+                url.search = new URLSearchParams({
+                    ids: this.shuffle(this.state.candidates).slice(0, 100).map(candidate => candidate.id)
+                });
+
+                fetch(url.toString(), {
+                    headers: {
+                        "Authorization": "Bearer " + this.props.accessToken
+                    }
+                }).then((response) => response.json()
+                    .then(data => {
+                        if (!data.error && data.audio_features[0] !== null) {
+                            let audioFeatures = data.audio_features.map(features => {
+                                return {
+                                    ...features, mse: this.mse(
+                                        [features.energy, features.instrumentalness, features.acousticness],
+                                        [this.state.preferences.energy / 100,  this.state.preferences.instrumentalness / 100,  this.state.preferences.acousticness / 100]
+                                    )
+                                }
+                            }
+                            );
+                            audioFeatures.sort(function (a, b) { return a.mse - b.mse })
+                            let bestMatch = audioFeatures[0]
+                            console.log(audioFeatures.map(f => f.mse))
+                            console.log(audioFeatures.map(f => {return {energy: f.energy, instrumentalness: f.instrumentalness, acousticness: f.acousticness, mse: f.mse}}))
+                            audioFeatures = audioFeatures.filter(a => a.mse <= bestMatch.mse + 0.05)
+                            console.log(audioFeatures.map(f => f.mse))
+                            console.log(audioFeatures.map(f => {return {energy: f.energy, instrumentalness: f.instrumentalness, acousticness: f.acousticness, mse: f.mse}}))
+                            bestMatch = this.randomItem(audioFeatures);
+                            console.log(bestMatch)
+                            this.state.candidates.forEach(candidate => {
+                                
+                                if (candidate.id === bestMatch.id) {
+                                    this.checkYt(candidate)
+                                    this.setState({ recap: true, song: candidate }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
+                                }
+                            })
+                        } else {
+                            this.checkYt(this.state.candidates[0])
+                            this.setState({ recap: true, song: this.state.candidates[0] }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
+                        }
+                    })
+                    .catch((error) => {
+                        console.log(error)
+                        this.setState({ criticalError: true, errorMessage: "could not get audio features" })
+                    })
+                )
+
+            })
+        }
+    }
+
+    mse = (a, b) => {
+        let error = 0
+        for (let i = 0; i < a.length; i++) {
+            error += Math.pow((b[i] - a[i]), 2)
+        }
+        return error / a.length
+    }
+
     componentDidUpdate() {
         console.log(this.state.awaiting)
-        if (!this.state.song && Object.values(this.state.awaiting).length > 0 && Object.values(this.state.awaiting).every(awaiting => !awaiting)) {
+        if (!this.state.song && Object.values(this.state.awaiting).length > 0 && Object.values(this.state.awaiting).every(awaiting => !awaiting)  && !this.state.awaitingFeatures) {
             // this.checkVideo(this.state.candidates[0])
-            this.checkYt(this.state.candidates[0])
-            this.setState({ recap: true, song: this.state.candidates[0] }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
+            // this.checkYt(this.state.candidates[0])
+            // this.setState({ recap: true, song: this.state.candidates[0] }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
+            this.getFeatures()
         }
     }
 
@@ -233,6 +300,10 @@ class FindSongWithoutAccount extends Component {
 
     msToMins = (ms) => {
         return ms / 60000;
+    }
+
+    randomItem = (items) => {
+        return items[Math.floor(Math.random() * items.length)]
     }
 
     checkYt = (song) => {
