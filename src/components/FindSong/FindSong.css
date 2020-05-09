@@ -14,14 +14,14 @@ padding-right: 10px;
 .time-slider > .rc-slider > .rc-slider-step {
     background: rgb(3,116,0);
     background: linear-gradient(90deg, #29c59e 0%, #29c59e 25%, #4da0ce 100%);
-    height: 12px;
+    height: 16px;
     border: 2px solid white;
     border-radius: 8px
 }
 
 .rc-slider-step {
     background: #29c59e;
-    height: 12px;
+    height: 16px;
     border: 2px solid white;
     border-radius: 8px
 }
@@ -40,8 +40,8 @@ padding-right: 10px;
 }
 
 .rc-slider-handle {
-    height: 21px;
-    width: 21px;
+    height: 25px;
+    width: 25px;
     background: #d4fff5;
     border: 2px solid white;
 }
@@ -73,11 +73,30 @@ padding-right: 10px;
     box-shadow: 0 4px 12px -6px black;
 }
 
+.preferences__question--options{
+    margin-top: 10px;
+}
+
+.preferences__find-button {
+    position: absolute;
+    left: 50%;
+    width: 100%;
+    margin-left: -125px;
+    bottom: 5%;
+    background-color: transparent;
+    max-width: 250px;
+    padding: 10px;
+    border: none;
+    border-radius: 100px;
+    box-shadow: 0 4px 12px -6px black;
+}
+
 .preferences__continue-button--inline{
     width: 100%;
     background-color: transparent;
     max-width: 250px;
-    padding: 10px;
+    padding: 10px;;
+    margin-top: 20px;
     border: none;
     border-radius: 100px;
     box-shadow: 0 4px 12px -6px black;
@@ -222,4 +241,22 @@ padding-right: 10px;
 
 .link {
     text-decoration: underline;
+}
+
+.genre-grid {
+    width: 100% !important;
+    margin-bottom: 20px;
+}
+
+.genre-button {
+    font-size: 0.8em !important;
+    background-color: transparent !important;
+    border: 2px solid white !important;
+    border-radius: 100px;
+    width: 25% !important;
+}
+
+.genre-button--active {
+    font-size: 0.8em !important;
+    background-color: #29c59e !important;
 }

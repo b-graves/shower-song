@@ -79,6 +79,7 @@ class FindSongWithAccount extends Component {
             awaiting: {},
             awaitingFeatures: false,
             nothingKnown: false,
+            youtubeResults: true
         }, () => this.scrollTo("searching"))
         setTimeout(() => {
             let url = new URL('https://api.spotify.com/v1/me/top/artists');
@@ -285,7 +286,7 @@ class FindSongWithAccount extends Component {
                 target_accouticness: this.state.preferences.acousticness / 100,
                 min_acousticness: (this.state.preferences.acousticness / 100) - 0.4,
                 max_acousticness: (this.state.preferences.acousticness / 100) + 0.4,
-                target_danceability: this.state.preferences.energy / 100,
+                // target_danceability: this.state.preferences.energy / 100,
                 target_energy: this.state.preferences.energy / 100,
                 min_energy: (this.state.preferences.energy / 100) - 0.4,
                 max_energy: (this.state.preferences.energy / 100) + 0.4,
@@ -462,6 +463,7 @@ class FindSongWithAccount extends Component {
                                 }
                             })
                         } else {
+                            this.checkYt(this.state.candidates[0])
                             this.setState({ song: this.state.candidates[0] }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
                         }
                     })

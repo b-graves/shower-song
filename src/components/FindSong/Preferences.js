@@ -13,6 +13,24 @@ class Preferences extends Component {
         return ms / 60000;
     }
 
+
+    chunk = (items, chunkSize) => {
+        var chunks = [];
+        for (var i = 0; i < items.length; i += chunkSize)
+            chunks.push(items.slice(i, i + chunkSize));
+        return chunks;
+    }
+
+    toggleGenre = (genreToChange) => {
+        let genres = this.props.preferences.genres;
+        genres.forEach(genre => {
+            if (genre.title === genreToChange.title) {
+                genre.selected = !genre.selected
+            }
+        });
+        this.props.setPreferences({ ...this.props.preferences, genres })
+    }
+
     render() {
         return (
             <div>
@@ -30,22 +48,24 @@ class Preferences extends Component {
                     : null}
                 <Form>
                     {this.props.showFamiliarity ?
-                            <ButtonGroup className="radio-options">
-                                <Button className={this.props.preferences.familiar ? "radio-option" : "radio-option radio-option--active"} onClick={() => this.props.setPreferences({ ...this.props.preferences, familiar: false })}>Something New</Button>
-                                <Button className={this.props.preferences.familiar ? "radio-option radio-option--active" : "radio-option"} onClick={() => this.props.setPreferences({ ...this.props.preferences, familiar: true })}>Something I know</Button>
-                            </ButtonGroup>
+                        <ButtonGroup className="radio-options">
+                            <Button className={this.props.preferences.familiar ? "radio-option" : "radio-option radio-option--active"} onClick={() => this.props.setPreferences({ ...this.props.preferences, familiar: false })}>Something New</Button>
+                            <Button className={this.props.preferences.familiar ? "radio-option radio-option--active" : "radio-option"} onClick={() => this.props.setPreferences({ ...this.props.preferences, familiar: true })}>Something I know</Button>
+                        </ButtonGroup>
                         : null}
                     {this.props.showGenres ?
-                        this.props.preferences.genres.map((genre, index) => <FormGroup check>
-                            <Label check>
-                                <Input type="checkbox" checked={genre.selected}
-                                    onChange={(e) => {
-                                        let preferences = this.props.preferences;
-                                        preferences.genres[index].selected = e.target.checked
-                                        this.props.setPreferences(preferences)
-                                    }} /> {genre.title}
-                            </Label>
-                        </FormGroup>)
+                        <ButtonGroup vertical className="genre-grid">
+                            {this.chunk(this.props.preferences.genres, 4).map(row => <ButtonGroup>
+                                {row.map(genre =>
+                                    <Button onClick={() => this.toggleGenre(genre)} className={genre.selected ? "genre-button genre-button--active" : "genre-button"}>{genre.title}</Button>
+                                )}
+                            </ButtonGroup>)}
+                        </ButtonGroup>
+                        : null}
+                    {this.props.showQuestion ?
+                        <div className="preferences__question preferences__question--options">
+                            What type of song are you in the mood for?
+                </div>
                         : null}
                     {this.props.showOptions ?
                         <div>

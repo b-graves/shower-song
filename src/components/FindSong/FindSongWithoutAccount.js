@@ -1,19 +1,38 @@
 import React, { Component } from 'react';
-import { Button, Input, Form, FormGroup, Label } from 'reactstrap';
+import { Button, Container, Row, Col, CustomInput, Form, FormGroup } from 'reactstrap';
 
 import 'rc-slider/assets/index.css';
 import Slider from 'rc-slider';
 
 import "./FindSong.css";
-import Preferences from './Preferences';
-import Song from './Song';
+
+import Song from "./Song"
+import Preferences from "./Preferences"
+
+import FullHeight from "react-full-height";
+
+import ScrollLock, { TouchScrollable } from 'react-scrolllock';
+
+import Animation from "../../assets/animation.gif"
+
+import { Element, Events, animateScroll as scroll, scrollSpy, scroller } from 'react-scroll'
+
+import { IoIosArrowUp } from 'react-icons/io';
+
+import Logo from "../../assets/logo.svg"
 
 class FindSongWithoutAccount extends Component {
     state = {
-        genreSeeds: [],
         candidates: [],
-        awaiting: {},
+        welcome: true,
+        welcomeScroll: true,
         song: null,
+        genreSeeds: null,
+        awaiting: {},
+        submitted: false,
+        timeSubmitted: false,
+        recap: false,
+        youtubeResults: true,
         preferences: {
             familiar: false,
             energy: 50,
@@ -26,47 +45,47 @@ class FindSongWithoutAccount extends Component {
             genres: [
                 {
                     title: "Ambient",
-                    seeds: ["ambient", "sleep", "chill"],
+                    seeds: ["ambient", "ambient", "ambient", "ambient", "sleep", "chill"],
                     selected: false
                 },
                 {
                     title: "Classical",
-                    seeds: ["classical"],
+                    seeds: ["classical","classical","classical","classical","classical","classical"],
                     selected: false
                 },
                 {
                     title: "Dance",
-                    seeds: ["dance", "disco", "party", "idm"],
+                    seeds: ["dance","dance","dance", "disco", "party", "idm"],
                     selected: false
                 },
                 {
                     title: "Electronic",
-                    seeds: ["electronic", "electro", "breakbeat", "drum-and-bass", "dub", "dubstep", "garage", "idm", "trance"],
+                    seeds: ["electronic","electronic","electronic","electronic", "electronic", "electro", "breakbeat", "drum-and-bass", "dub", "dubstep", "garage", "idm", "trance"],
                     selected: false
                 },
                 {
                     title: "Folk",
-                    seeds: ["folk", "country", "acoustic"],
+                    seeds: ["folk","folk","folk", "country", "acoustic"],
                     selected: false
                 },
                 {
                     title: "Hip Hop",
-                    seeds: ["hip-hop"],
+                    seeds: ["hip-hop","hip-hop","hip-hop","hip-hop","hip-hop","hip-hop"],
                     selected: false
                 },
                 {
                     title: "House",
-                    seeds: ["house", "progressive-house", "chicago-house", "deep-house", "breakbeat", "garage"],
+                    seeds: ["house","house","house","house","deep-house", "progressive-house", "progressive-house", "chicago-house", "deep-house", "breakbeat", "garage"],
                     selected: false
                 },
                 {
-                    title: "Indie Rock",
-                    seeds: ["indie", "indie-pop", "alt-rock", "alternative"],
+                    title: "Indie",
+                    seeds: ["indie","indie", "indie", "indie-pop", "alt-rock", "alternative"],
                     selected: false
                 },
                 {
                     title: "Jazz",
-                    seeds: ["jazz", "blues", "funk"],
+                    seeds: ["jazz","jazz","jazz", "blues", "funk"],
                     selected: false
                 },
                 {
@@ -81,27 +100,27 @@ class FindSongWithoutAccount extends Component {
                 },
                 {
                     title: "Pop",
-                    seeds: ["pop", "indie-pop", "synth-pop", "k-pop", "j-pop", "afrobeat"],
+                    seeds: ["pop","pop", "pop", "pop","pop","pop", "indie-pop", "synth-pop", "k-pop", "j-pop", "afrobeat"],
                     selected: false
                 },
                 {
                     title: "Reggae",
-                    seeds: ["reggae"],
+                    seeds: ["reggae","reggae","reggae","reggae","reggae"],
                     selected: false
                 },
                 {
                     title: "Rock",
-                    seeds: ["rock", "hard-rock", "alt-rock", "rock-n-roll", "grunge", "psych-rock", "guitar", "j-rock"],
+                    seeds: ["rock","rock","rock","rock", "hard-rock", "alt-rock", "rock-n-roll", "grunge", "psych-rock", "guitar", "j-rock"],
                     selected: false
                 },
                 {
                     title: "Soul",
-                    seeds: ["soul"],
+                    seeds: ["soul","soul","soul","soul","soul","soul"],
                     selected: false
                 },
                 {
                     title: "Techno",
-                    seeds: ["techno", "detroit-techno", "minimal-techno", "industrial"],
+                    seeds: ["techno","techno","techno","minimal-techno","minimal-techno", "detroit-techno", "minimal-techno", "industrial"],
                     selected: false
                 },
             ]
@@ -124,14 +143,21 @@ class FindSongWithoutAccount extends Component {
             url.search = new URLSearchParams({
                 limit: 100,
                 ["seed_" + type]: values.slice(i, i + 5).map(value => type === "genres" ? value : value.id).join(","),
+                target_duration_ms: this.minsToMs(this.state.preferences.duration),
                 min_duration_ms: this.minsToMs(this.state.preferences.duration - 0.25),
                 max_duration_ms: this.minsToMs(this.state.preferences.duration + 0.25),
-
-                target_acousticness: this.state.preferences.acousticness / 100,
-                target_danceability: this.state.preferences.energy / 100,
+                target_accouticness: this.state.preferences.acousticness / 100,
+                min_acousticness: (this.state.preferences.acousticness / 100) - 0.4,
+                max_acousticness: (this.state.preferences.acousticness / 100) + 0.4,
+                // target_danceability: this.state.preferences.energy / 100,
                 target_energy: this.state.preferences.energy / 100,
+                min_energy: (this.state.preferences.energy / 100) - 0.4,
+                max_energy: (this.state.preferences.energy / 100) + 0.4,
                 target_instrumentalness: this.state.preferences.instrumentalness / 100,
-                target_valence: this.state.preferences.energy / 100,
+                min_instrumentalness: (this.state.preferences.instrumentalness / 100) - 0.4,
+                max_instrumentalness: (this.state.preferences.instrumentalness / 100) + 0.4,
+                // target_popularity: this.state.preferences.popularity,
+                // target_valence: this.state.preferences.energy / 100,
             });
             this.setState({ awaiting: { ...this.state.awaiting, [type + i]: true } })
             fetch(url.toString(), {
@@ -154,12 +180,22 @@ class FindSongWithoutAccount extends Component {
 
     onClick = () => {
         let seeds = []
-        this.state.preferences.genres.forEach(genre => {
-            if (genre.selected) {
-                seeds = seeds.concat(genre.seeds)
-            }
-        })
-        this.getReccommendations("genres", seeds.filter(seed => this.state.genreSeeds.includes(seed)))
+        this.setState({
+            candidates: [],
+            song: null,
+            awaiting: {},
+            submitted: true,
+            recap: false,
+            youtubeResults: true
+        }, () => this.scrollTo("searching"))
+        setTimeout(() => {
+            this.state.preferences.genres.forEach(genre => {
+                if (genre.selected) {
+                    seeds = seeds.concat(genre.seeds)
+                }
+            })
+            this.getReccommendations("genres", seeds.filter(seed => this.state.genreSeeds.includes(seed)))
+        }, 2000)
     }
 
     componentDidMount() {
@@ -180,7 +216,8 @@ class FindSongWithoutAccount extends Component {
         console.log(this.state.awaiting)
         if (!this.state.song && Object.values(this.state.awaiting).length > 0 && Object.values(this.state.awaiting).every(awaiting => !awaiting)) {
             // this.checkVideo(this.state.candidates[0])
-            this.setState({ song: this.state.candidates[0] })
+            this.checkYt(this.state.candidates[0])
+            this.setState({ recap: true, song: this.state.candidates[0] }, () => this.scrollToThen("result", () => this.setState({ submitted: false })))
         }
     }
 
@@ -192,26 +229,210 @@ class FindSongWithoutAccount extends Component {
         return ms / 60000;
     }
 
+    checkYt = (song) => {
+        const Http = new XMLHttpRequest();
+        const url = "https://cors-anywhere.herokuapp.com/https://www.youtube.com/results?search_query=" + song.external_ids.isrc;
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onreadystatechange = (e) => {
+            this.setState({ youtubeResults: !Http.responseText.includes("No results found") })
+        }
+    }
+
+    scrollTo(section) {
+        // scroll.scrollToBottom();
+        scroller.scrollTo(section, {
+            duration: 750,
+            delay: 0,
+            smooth: true,
+            offset: 0
+        })
+    }
+
+    scrollToThen(section, callback) {
+        // scroll.scrollToBottom();
+        scroller.scrollTo(section, {
+            duration: 750,
+            delay: 0,
+            smooth: true,
+            offset: 0
+        })
+        setTimeout(() => callback(), 750)
+    }
+
     render() {
         return (
-            this.state.song ?
-                <Song
-                    song={this.state.song}
-                    preferences={this.state.preferences}
-                    nothingKnown={this.state.nothingKnown}
-                    showSpotify={false}
-                    showYouTube={true}
-                />
+            this.state.criticalError ?
+                <FullHeight className="preferences">
+                    <Container className="central-content time-container">
+                        <Row>
+                            <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                <div>Something went wrong...</div>
+                                <button className="error-button" onClick={() => this.props.reconnect()}>Try Again</button>
+                                <div className="error-message">Error: {this.state.errorMessage}</div>
+                            </Col>
+                        </Row>
+                    </Container>
+                </FullHeight>
                 :
                 <div>
-                    <Preferences
-                        preferences={this.state.preferences}
-                        setPreferences={preferences => this.setState({ preferences })}
-                        showFamiliarity={false}
-                        showGenres={true}
-                    />
-                    <Button onClick={() => this.onClick()} className="spotify-connect__button" color="primary">Find Your Song</Button>
-                </div >
+                    {this.state.welcome || this.state.welcomeScroll ?
+                        <Element name="welcome">
+                            <FullHeight className="preferences preferences--time">
+                                <Container className="central-content time-container">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <img className="welcome-page__logo" src={Logo} alt="Shower Song Logo" />
+                                            <div className="start-page__title">Shower Song</div>
+                                            <div className="welcome-page__message">
+                                                Welcome!
+                                    </div>
+                                            <div className="welcome-page__explain">
+                                                We have some questions to help us find a song that fits your music taste and the length of shower you want to take...
+                                    </div>
+                                        </Col>
+                                    </Row>
+                                </Container>
+                                {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => { this.setState({ welcome: false }, () => this.scrollToThen("time", () => this.setState({ welcomeScroll: false }))) }}>Get Started</button>}
+                            </FullHeight>
+                        </Element>
+                        : null}
+                    {this.state.welcome || this.state.song || this.state.recap ? null : <Element name="time">
+
+                        <FullHeight className="preferences preferences--time">
+                            <Container className="central-content time-container">
+                                <Row>
+                                    <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                        <div className="preferences__question preferences__question--time">
+                                            How many minutes would you like to spend in the shower?
+                                        </div>
+                                        <Preferences
+                                            preferences={this.state.preferences}
+                                            setPreferences={preferences => { console.log(preferences); this.setState({ preferences }) }}
+                                            showTime={true}
+                                            showFamiliarity={false}
+                                            showGenres={false}
+                                            showOptions={false}
+                                        />
+                                    </Col>
+                                </Row>
+                            </Container>
+                            {this.state.timeSubmitted ? null : <button className="preferences__continue-button" onClick={() => this.setState({ timeSubmitted: true }, () => this.scrollTo("options"))}>Continue</button>}
+                        </FullHeight>
+
+                    </Element>}
+                    {this.state.timeSubmitted ?
+                        !this.state.song && !this.state.recap ?
+                            <Element name="options">
+                                <FullHeight className="preferences preferences--options">
+                                    <Container className="central-content">
+                                        <Row>
+                                            <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                                <div className="preferences__question preferences__question--options">
+                                                    What are your favourite genres?
+                                        </div>
+                                                <Preferences
+                                                    preferences={this.state.preferences}
+                                                    setPreferences={preferences => this.setState({ preferences })}
+                                                    showTime={false}
+                                                    showFamiliarity={false}
+                                                    showGenres={true}
+                                                    showOptions={true}
+                                                    showQuestion={true}
+                                                />
+                                            </Col>
+                                        </Row>
+                                    </Container>
+                                    <button className="preferences__find-button"
+                                        onClick={() => {
+                                            this.onClick();
+                                        }}
+                                    >Find your perfect song</button>
+                                </FullHeight>
+                            </Element>
+                            :
+                            <FullHeight className="preferences preferences--options" canExceed>
+                                <Container>
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <img className="recap-page__logo" src={Logo} alt="Shower Song Logo" />
+                                            <div className="recap-page__title">Shower Song</div>
+                                            <div className="recap__time">
+                                                <div className="preferences__question preferences__question--time">
+                                                    How many minutes would you like to spend in the shower?
+                                        </div>
+                                                <Preferences
+                                                    preferences={this.state.preferences}
+                                                    setPreferences={preferences => this.setState({ preferences })}
+                                                    showTime={true}
+                                                    showFamiliarity={false}
+                                                    showGenres={false}
+                                                    showOptions={false}
+                                                />
+                                            </div>
+                                            <div className="preferences__question preferences__question--options">
+                                                What are your favourite genres?
+                                        </div>
+                                            <Preferences
+                                                preferences={this.state.preferences}
+                                                setPreferences={preferences => this.setState({ preferences })}
+                                                showTime={false}
+                                                showFamiliarity={false}
+                                                showGenres={true}
+                                                showOptions={true}
+                                                showQuestion={true}
+                                            />
+                                        </Col>
+                                    </Row>
+                                    <button className="preferences__continue-button--inline"
+                                        onClick={() => {
+                                            this.onClick();
+                                        }}
+                                    >Find your perfect song</button>
+                                </Container>
+                            </FullHeight>
+                        : null}
+                    {this.state.submitted ?
+                        <Element name="searching">
+                            <FullHeight className="searching">
+                                <Container className="central-content">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <div>
+                                                <img src={Animation} width={"50%"} alt="loading animation " />
+                                                <div>
+                                                    Finding Your Perfect Shower Song...
+                                            </div>
+                                            </div>
+                                        </Col>
+                                    </Row>
+                                </Container>
+                            </FullHeight>
+                        </Element>
+                        : null}
+                    {this.state.song ?
+                        <Element name="result">
+                            <FullHeight className="song-result result-page__background" >
+                                <Container className="central-content">
+                                    <Row>
+                                        <Col sm="12" md={{ size: 6, offset: 3 }}>
+                                            <Song
+                                                song={this.state.song}
+                                                preferences={this.state.preferences}
+                                                nothingKnown={this.state.nothingKnown}
+                                                showSpotify={true}
+                                                showYouTube={false}
+                                                accessToken={this.props.accessToken}
+                                                youtubeResults={this.state.youtubeResults}
+                                            />
+                                        </Col>
+                                    </Row>
+                                </Container>
+                            </FullHeight>
+                        </Element>
+                        : null}
+                </div>
         );
     }
 }
