@@ -206,7 +206,7 @@ class Song extends Component {
             //             })
             //         });
             //     }))
-        }, 5000);
+        }, 2500);
 
     }
 
