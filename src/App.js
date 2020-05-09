@@ -98,7 +98,7 @@ class App extends Component {
           !this.state.connecting ?
             this.state.accessToken ?
               this.state.connectedToSpotifyAccount ?
-                <FindSongWithAccount reconnect={() => this.onClickConnect()} data={this.state.serverData} accessToken={this.state.accessToken} />
+                <FindSongWithAccount reconnect={() => this.onClickConnect()} disconnect={() => this.onClickContinue()} data={this.state.serverData} accessToken={this.state.accessToken} />
                 : <FindSongWithoutAccount accessToken={this.state.accessToken} />
               :
               <FullHeight className="start-page__background">

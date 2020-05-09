@@ -11,7 +11,8 @@ import { FaSpotify, FaYoutube } from "react-icons/fa"
 class Song extends Component {
 
     state = {
-        playing: false
+        playing: false,
+        playAttempts: 0
     }
 
 
@@ -20,28 +21,32 @@ class Song extends Component {
     }
 
     autoPlay = () => {
-        setTimeout(() => {
-            let url = new URL('https://api.spotify.com/v1/me/player/queue');
-
-            url.search = new URLSearchParams({
-                uri: this.props.song.uri
-            });
-
-            fetch(url.toString(), {
-                headers: {
-                    "Authorization": "Bearer " + this.props.accessToken
-                },
-                method: 'POST'
-            }).then(data => {
-                let url = new URL('https://api.spotify.com/v1/me/player/next');
+        if (!this.state.playing && this.state.playAttempts < 30) {
+            setTimeout(() => {
+                console.log("trying to play")
+                let url = new URL('https://api.spotify.com/v1/me/player/play');
                 fetch(url.toString(), {
                     headers: {
                         "Authorization": "Bearer " + this.props.accessToken
                     },
-                    method: 'POST'
-                })
-            });
-        }, 2000);
+                    method: 'PUT',
+                    uris: [this.props.song.uri]
+                }).then((response) => response.json()
+                .then(data => {
+                    if (data.okay) {
+                        console.log("playing")
+                        this.setState({playing: true});
+                    } else {
+                        console.log("not playing")
+                        this.setState({playing: false, playAttempts: this.state.playAttempts + 1})
+                        this.autoPlay();
+                    }
+                }
+                )
+                .catch(error => this.setState({playing: true}))
+                )
+            }, 1000);
+        }
 
     }
 

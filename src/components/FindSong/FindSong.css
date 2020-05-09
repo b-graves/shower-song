@@ -211,5 +211,15 @@ padding-right: 10px;
 
 .welcome-page__explain {
     padding: 10px;
-    padding-bottom: 70px;
+    padding-bottom: 30px;
+    
+}
+
+.welcome-page__alt-option{
+    font-size: 0.7em;
+    padding-bottom: 100px;
+}
+
+.link {
+    text-decoration: underline;
 }

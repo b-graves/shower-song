@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Container, Row, Col, CustomInput, Form, FormGroup, Label } from 'reactstrap';
+import { Button, Container, Row, Col, CustomInput, Form, FormGroup } from 'reactstrap';
 
 import 'rc-slider/assets/index.css';
 import Slider from 'rc-slider';
@@ -15,7 +15,7 @@ import ScrollLock, { TouchScrollable } from 'react-scrolllock';
 
 import Animation from "../../assets/animation.gif"
 
-import { Link, Element, Events, animateScroll as scroll, scrollSpy, scroller } from 'react-scroll'
+import { Element, Events, animateScroll as scroll, scrollSpy, scroller } from 'react-scroll'
 
 import { IoIosArrowUp } from 'react-icons/io';
 
@@ -293,7 +293,7 @@ class FindSongWithAccount extends Component {
                 min_instrumentalness: (this.state.preferences.instrumentalness / 100) - 0.4,
                 max_instrumentalness: (this.state.preferences.instrumentalness / 100) + 0.4,
                 // target_popularity: this.state.preferences.popularity,
-                target_valence: this.state.preferences.energy / 100,
+                // target_valence: this.state.preferences.energy / 100,
             });
             this.setState({ awaiting: { ...this.state.awaiting, [type + i]: true } })
             fetch(url.toString(), {
@@ -365,7 +365,7 @@ class FindSongWithAccount extends Component {
             } else if (artists.length === 0) {
                 this.setState({ criticalError: true, errorMessage: "no top artists" })
             } else {
-            this.setState({ generating: true, candidates: tracks })
+                this.setState({ generating: true, candidates: tracks })
             }
         }
     }
@@ -477,7 +477,6 @@ class FindSongWithAccount extends Component {
 
     componentDidUpdate() {
         if (!this.state.criticalError) {
-            console.log(this.state)
             if (!this.state.song && this.state.discoverWeekly && this.state.topArtists && this.state.topTracks.items && this.state.secondaryArtists && this.state.secondaryTracks && this.state.genreSeeds && !this.state.song && !this.state.generating) {
                 this.getCandidates()
             } else if (!this.state.candidatesFiltered && Object.values(this.state.awaiting).every(awaiting => !awaiting) && this.state.generating && !this.state.gettingReccomendations) {
@@ -539,6 +538,9 @@ class FindSongWithAccount extends Component {
                                             <div className="welcome-page__explain">
                                                 Your Spotify listening data will be used to find a song that fits your music taste and the length of shower you want to take...
                                     </div>
+                                            <div className="welcome-page__alt-option">
+                                                If you would prefer to not share your listening data and select your favourite genres manually <span onClick={() => this.props.disconnect()} className="link">click here</span>
+                        </div>
 
                                         </Col>
                                     </Row>
